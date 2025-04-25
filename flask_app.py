@@ -3,7 +3,10 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 
+#WARN: Dont use this in production as no security measures are implemented
+
 app = Flask(__name__)
+
 UPLOAD_FOLDER = 'uploaded_videos'
 PROCESSED_FOLDER = 'processed_videos'
 ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov'}
@@ -16,7 +19,6 @@ os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 
 @app.route('/upload_video', methods=['POST'])
 def upload_video():
@@ -39,4 +41,5 @@ def send_processed_video(filename):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(host='0.0.0.0', port=5001, debug=debug_mode)
