@@ -2,6 +2,19 @@ import gradio as gr
 import os
 import tempfile
 
+def load_gallery_videos():
+    gallery_dir = "video_gallery"
+    if not os.path.exists(gallery_dir):
+        os.makedirs(gallery_dir)
+        return []
+    
+    video_files = []
+    for f in os.listdir(gallery_dir):
+        if f.lower().endswith(('.mp4', '.avi', '.mov', '.mkv')):
+            file_path = os.path.join(gallery_dir, f)
+            video_files.append((file_path, f))  # Return tuple of (file_path, filename)
+    return video_files
+
 def process_video(video_path):
     # This is a placeholder for your video processing logic
     # You would typically call your soccer analysis model here
@@ -21,6 +34,28 @@ def create_interface():
                 )
                 
                 upload_button = gr.Button("Process Video", variant="primary")
+                
+                # Add gallery below the video input
+                gr.Markdown("### Video Gallery")
+                with gr.Row():
+                    gallery = gr.Gallery(
+                        label="Available Videos",
+                        show_label=True,
+                        elem_id="gallery",
+                        columns=2,
+                        rows=2,
+                        height=300,
+                        value=load_gallery_videos()
+                    )
+                    refresh_button = gr.Button("🔄 Refresh Gallery")
+                
+                def refresh_gallery():
+                    return load_gallery_videos()
+                
+                refresh_button.click(
+                    fn=refresh_gallery,
+                    outputs=[gallery]
+                )
             
             with gr.Column(scale=1):
                 # Right side - Results
