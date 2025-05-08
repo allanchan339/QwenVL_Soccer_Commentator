@@ -49,7 +49,7 @@ def create_interface():
             with gr.Column(scale=1):
                 # Left side - Video input and controls
                 video_input = gr.Video(
-                    label="Upload Soccer Video",
+                    # label="Upload Soccer Video",
                     interactive=True,
                     height=400
                 )
@@ -60,12 +60,11 @@ def create_interface():
                 gr.Markdown("### Video Gallery")
                 with gr.Column():
                     gallery = gr.Gallery(
-                        label="Available Videos",
+                        # label="Available Videos",
                         show_label=True,
                         elem_id="gallery",
-                        columns=2,
-                        rows=2,
-                        height=300,
+                        # columns=4,
+                        # height=300,
                         allow_preview=False,
                         value=load_gallery_videos()
                     )
