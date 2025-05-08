@@ -20,6 +20,27 @@ def process_video(video_path):
     # You would typically call your soccer analysis model here
     return f"Processed video: {os.path.basename(video_path)}"
 
+def select_gallery_video(evt: gr.SelectData):
+    # evt.value corresponds to the selected item from the gallery.
+    # Based on the warning, evt.value can be a dictionary like:
+    # {'video': {'path': 'filepath', ...}, 'caption': 'filename'}
+    # It might also be a tuple (file_path, filename) or a direct string path in other cases.
+    selected_data = evt.value
+
+    if isinstance(selected_data, dict) and 'video' in selected_data and isinstance(selected_data['video'], dict) and 'path' in selected_data['video']:
+        # Handle the dictionary structure: {'video': {'path': 'filepath', ...}, ...}
+        return selected_data['video']['path']
+    elif isinstance(selected_data, tuple) and len(selected_data) > 0:
+        # Handle tuple: (file_path, filename)
+        return selected_data[0]
+    elif isinstance(selected_data, str):
+        # Handle string: file_path
+        return selected_data
+    else:
+        # Fallback for unexpected data type.
+        print(f"Warning: Unexpected data type or structure from gallery selection: {type(selected_data)}. Value: {selected_data}")
+        return None
+
 def create_interface():
     with gr.Blocks(theme=gr.themes.Soft()) as demo:
         gr.Markdown("# Soccer Video Analysis")
@@ -37,7 +58,7 @@ def create_interface():
                 
                 # Add gallery below the video input
                 gr.Markdown("### Video Gallery")
-                with gr.Row():
+                with gr.Column():
                     gallery = gr.Gallery(
                         label="Available Videos",
                         show_label=True,
@@ -45,6 +66,7 @@ def create_interface():
                         columns=2,
                         rows=2,
                         height=300,
+                        allow_preview=False,
                         value=load_gallery_videos()
                     )
                     refresh_button = gr.Button("🔄 Refresh Gallery")
@@ -55,6 +77,12 @@ def create_interface():
                 refresh_button.click(
                     fn=refresh_gallery,
                     outputs=[gallery]
+                )
+                
+                # Add click event for gallery items
+                gallery.select(
+                    fn=select_gallery_video,
+                    outputs=[video_input]
                 )
             
             with gr.Column(scale=1):
