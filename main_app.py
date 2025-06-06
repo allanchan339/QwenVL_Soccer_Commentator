@@ -5,7 +5,7 @@ Main entry point that coordinates video processing, audio generation, and UI.
 """
 
 import os
-from modules.ui import SoccerVideoUI
+from modules.ui import SoccerVideoInterface
 
 
 def main():
@@ -14,14 +14,14 @@ def main():
     print("📁 Ensuring directories exist...")
     
     # Ensure required directories exist
-    directories = ["video_gallery", "temp_audio", "processed_videos"]
+    directories = ["video_gallery", "temp_audio", "processed_videos", "utils", "services"]
     for directory in directories:
         os.makedirs(directory, exist_ok=True)
     
-    print("🎬 Initializing UI...")
+    print("🎬 Initializing new UI...")
     
     # Create and launch the UI
-    ui = SoccerVideoUI()
+    ui = SoccerVideoInterface()
     demo = ui.create_interface()
     
     print("🌐 Launching web interface...")
