@@ -1,91 +1,145 @@
-# Soccer Video Analysis - Refactored Architecture
+# Soccer Video Analysis - 3-File Structure ⚽
 
-This project has been refactored to follow a clean, modular architecture with proper separation of concerns.
+A clean, modular soccer video analysis application with AI-generated commentary, organized into 3 focused files.
 
-## Project Structure
+## 📁 Project Structure
 
 ```
-├── src/
-│   ├── __init__.py
-│   ├── config.py                    # Centralized configuration
-│   ├── services/                    # Business logic services
-│   │   ├── __init__.py
-│   │   ├── minimax_tts.py          # Minimax TTS API wrapper
-│   │   ├── soccer_pipeline.py      # Main processing pipeline
-│   │   ├── tts_service.py          # TTS service abstraction
-│   │   ├── video_analysis.py       # Video analysis with Qwen model
-│   │   └── video_processor.py      # Video processing and combining
-│   ├── ui/                          # User interface components
-│   │   ├── __init__.py
-│   │   └── gradio_interface.py     # Gradio UI implementation
-│   └── utils/                       # Utility functions
-│       ├── __init__.py
-│       └── video_utils.py          # Video-related helper functions
-├── gradio_demo.py                  # Clean main entry point
-├── flask_app.py                    # Flask application (if needed)
-├── modelscope_app.py               # ModelScope app (if needed)
-├── requirements.txt
-└── .env                            # Environment variables
+├── simple_app.py           # Main entry point (20 lines)
+├── video_processor.py      # Video analysis & processing (130 lines)
+├── audio_processor.py      # Text-to-speech generation (140 lines)
+├── ui.py                   # Gradio user interface (250 lines)
+├── simple_requirements.txt # Dependencies
+├── setup_simple.py        # Setup script
+└── .env                   # API configuration
 ```
 
-## Key Features of the Refactored Architecture
+## 🎯 Module Responsibilities
 
-### 1. **Separation of Concerns**
-- **Services**: Handle business logic (video analysis, TTS, video processing)
-- **UI**: Manages user interface components
-- **Utils**: Provides reusable utility functions
-- **Config**: Centralizes all configuration settings
+### 1. `video_processor.py` - Video Processing
+- **VideoProcessor class**: Handles video analysis and processing
+- **Key Functions**:
+  - `analyze_video()` - AI video analysis with Qwen model
+  - `combine_video_audio()` - Merge video with generated audio using ffmpeg
+  - `get_video_info()` - Extract video metadata
 
-### 2. **Modular Design**
-- Each service is self-contained and can be tested independently
-- Clean interfaces between modules
-- Easy to extend or replace individual components
+### 2. `audio_processor.py` - Audio Generation  
+- **AudioProcessor class**: Manages text-to-speech operations
+- **Key Functions**:
+  - `generate_audio()` - Convert text to speech using Minimax API
+  - `get_available_voices()` - List available voice options
+  - `cleanup_temp_audio()` - Clean up temporary audio files
 
-### 3. **Clean Entry Point**
-The new `gradio_demo.py` is extremely clean:
-```python
-from src.ui.gradio_interface import SoccerVideoInterface
-from src.config import DEFAULT_SERVER_NAME, DEFAULT_SERVER_PORT, DEFAULT_SHARE
+### 3. `ui.py` - User Interface
+- **SoccerVideoUI class**: Handles all user interactions
+- **Key Functions**:
+  - `create_interface()` - Build Gradio web interface
+  - `process_video_pipeline()` - Coordinate complete processing workflow
+  - `load_gallery_videos()` - Manage video gallery
 
-def main():
-    interface = SoccerVideoInterface()
-    demo = interface.create_interface()
-    demo.launch(
-        server_name=DEFAULT_SERVER_NAME,
-        server_port=DEFAULT_SERVER_PORT,
-        share=DEFAULT_SHARE
-    )
-```
+### 4. `simple_app.py` - Main Entry Point
+- **Simple coordinator**: Initializes directories and launches UI
+- **Minimal code**: Just 20 lines to start the application
 
-## How to Use
+## 🚀 Quick Start
 
 ```bash
-python gradio_demo.py
+# Setup (one command)
+python setup_simple.py
+
+# Configure API keys in .env
+MODELSCOPE_SDK_TOKEN=your_token_here
+MINIMAX_GROUP_ID=your_group_id_here  
+MINIMAX_API_KEY=your_api_key_here
+
+# Run the application
+python simple_app.py
 ```
 
-## Benefits of This Refactoring
+## ✨ Benefits of This Structure
 
-1. **Maintainability**: Code is organized logically and easy to navigate
-2. **Testability**: Each module can be tested independently
-3. **Reusability**: Services can be reused in different contexts
-4. **Scalability**: Easy to add new features or replace components
-5. **Clean Dependencies**: Clear import structure with minimal coupling
+### **Separation of Concerns**
+- 🎥 Video processing isolated in one module
+- 🎙️ Audio generation in dedicated module  
+- 🖥️ UI logic cleanly separated
+- 🚀 Main app just coordinates
 
-## Example Usage of Individual Services
+### **Easy to Understand**
+- Each file has a single, clear purpose
+- Functions are logically grouped
+- Dependencies are minimal between modules
+
+### **Simple to Extend**
+- Add new video processing features → Edit `video_processor.py`
+- Add new audio options → Edit `audio_processor.py`
+- Improve UI → Edit `ui.py`
+- Change startup behavior → Edit `simple_app.py`
+
+### **Easy to Test**
+- Test video processing independently
+- Test audio generation separately
+- Test UI components in isolation
+
+## 🔧 Features
+
+- **🎬 Video Analysis**: Qwen AI model analyzes soccer videos
+- **🎙️ Text-to-Speech**: Minimax API converts commentary to audio
+- **🎥 Video Processing**: FFmpeg combines video with generated audio
+- **📱 Modern UI**: Clean Gradio interface with progress tracking
+- **📁 Gallery**: Browse and select from uploaded videos
+- **⚙️ Voice Options**: Multiple voice choices and speed control
+
+## 📊 Comparison with Previous Versions
+
+| Structure | Files | Lines | Complexity | Maintainability |
+|-----------|-------|-------|------------|----------------|
+| Original Complex | 15+ files | 500+ lines | High | Complex |
+| Single File | 1 file | 200 lines | Low | Simple |
+| **3-File Structure** | **4 files** | **540 lines** | **Medium** | **Optimal** |
+
+## 🛠 Dependencies
+
+```
+gradio>=4.0.0     # Web interface
+openai>=1.0.0     # AI model integration  
+python-dotenv>=1.0.0  # Environment variables
+requests>=2.28.0  # HTTP requests
+```
+
+## 🎪 Usage Examples
+
+### Using Individual Modules
 
 ```python
-from src.services.soccer_pipeline import SoccerAnalysisPipeline
-from src.services.video_analysis import VideoAnalyzer
-from src.services.tts_service import TTSService
+# Video processing only
+from video_processor import VideoProcessor
+processor = VideoProcessor()
+commentary = processor.analyze_video("video.mp4")
 
-# Use the complete pipeline
-pipeline = SoccerAnalysisPipeline()
-result_video, commentary = pipeline.process_video("path/to/video.mp4")
+# Audio generation only  
+from audio_processor import AudioProcessor
+audio = AudioProcessor()
+audio_path = audio.generate_audio("Great goal!", voice_id="male-qiaoshu")
 
-# Or use individual services
-analyzer = VideoAnalyzer()
-commentary = analyzer.analyze_video("path/to/video.mp4")
+# UI only
+from ui import SoccerVideoUI
+ui = SoccerVideoUI()
+demo = ui.create_interface()
+```
 
-tts = TTSService()
-audio_path = tts.generate_audio(commentary)
-``` 
+### Full Pipeline
+```python
+# Complete application
+python simple_app.py
+# Opens http://localhost:7860 automatically
+```
+
+## 🎯 Perfect Balance
+
+This 3-file structure provides the **perfect balance** between:
+- ✅ **Simplicity** (not too many files)
+- ✅ **Organization** (clear separation of concerns)  
+- ✅ **Maintainability** (easy to modify and extend)
+- ✅ **Readability** (each module has a clear purpose)
+
+**Best for**: Teams that want clean code organization without over-engineering! 
