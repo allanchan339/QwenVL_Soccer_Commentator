@@ -110,12 +110,20 @@ class VideoProcessor:
                 },
             ]
             
+            print(f"Sending request to {QWEN_MODEL} with max_tokens: {max_tokens_limit*2}")
+            
             response = self.client.chat.completions.create(
                 model=QWEN_MODEL,
                 messages=video_messages,
                 max_tokens=max_tokens_limit*2,  # Dynamic based on target words
                 temperature=0.7
             )
+            
+            print(f"Response received. Choices count: {len(response.choices) if response.choices else 0}")
+            
+            # Check if response has choices before accessing
+            if not response.choices or len(response.choices) == 0:
+                return "Error: No response choices returned from the AI model"
             
             commentary = response.choices[0].message.content
             return commentary if commentary else "No commentary generated"
