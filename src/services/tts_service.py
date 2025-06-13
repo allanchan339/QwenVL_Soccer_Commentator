@@ -1,4 +1,4 @@
-"""Text-to-Speech service using Minimax API."""
+"""Text-to-Speech service placeholder."""
 
 import os
 from typing import Optional
@@ -9,7 +9,7 @@ from ..utils.video_utils import ensure_directory_exists
 
 
 class TTSService:
-    """Service for generating speech from text using Minimax TTS."""
+    """Placeholder service for generating speech from text."""
     
     def __init__(self, output_dir: str = TEMP_AUDIO_DIR):
         """Initialize the TTS service.
@@ -21,14 +21,14 @@ class TTSService:
         ensure_directory_exists(self.output_dir)
     
     def generate_audio(self, text: str, filename: Optional[str] = None) -> Optional[str]:
-        """Generate TTS audio from text.
+        """Placeholder for generating TTS audio from text.
         
         Args:
             text: Text to convert to speech
             filename: Optional filename for the audio file. If None, generates one based on text hash.
             
         Returns:
-            Path to generated audio file if successful, None otherwise
+            None as this is a placeholder implementation
         """
         if not text or text.startswith("Error"):
             return None
@@ -42,15 +42,15 @@ class TTSService:
             
             audio_path = os.path.join(self.output_dir, audio_filename)
             
-            # Call Minimax TTS
+            # Call placeholder TTS implementation
             generated_audio_path = generate_minimax_tts(text, audio_path)
             
             if generated_audio_path:
                 return generated_audio_path
             else:
-                print("Minimax TTS failed, no audio generated.")
+                print("TTS functionality is currently disabled - this is a placeholder implementation.")
                 return None
                 
         except Exception as e:
-            print(f"Error generating TTS audio: {str(e)}")
+            print(f"Error in placeholder TTS implementation: {str(e)}")
             return None 

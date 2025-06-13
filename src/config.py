@@ -8,8 +8,6 @@ load_dotenv()
 
 # API Configuration
 MODELSCOPE_SDK_TOKEN = os.getenv("MODELSCOPE_SDK_TOKEN")
-MINIMAX_GROUP_ID = os.getenv("MINIMAX_GROUP_ID")
-MINIMAX_API_KEY = os.getenv("MINIMAX_API_KEY")
 
 # Model Configuration
 QWEN_MODEL = "Qwen/Qwen2.5-VL-72B-Instruct"
