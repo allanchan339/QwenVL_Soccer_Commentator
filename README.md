@@ -12,7 +12,7 @@ This project has been refactored to follow a clean, modular architecture with pr
 │   │   ├── __init__.py
 │   │   ├── minimax_tts.py          # Minimax TTS API wrapper
 │   │   ├── soccer_pipeline.py      # Main processing pipeline
-│   │   ├── tts_service.py          # TTS service abstraction
+│   │   ├── tts_service.py          # ModelScope TTS service
 │   │   ├── video_analysis.py       # Video analysis with Qwen model
 │   │   └── video_processor.py      # Video processing and combining
 │   ├── ui/                          # User interface components
@@ -41,26 +41,28 @@ This project has been refactored to follow a clean, modular architecture with pr
 - Clean interfaces between modules
 - Easy to extend or replace individual components
 
-### 3. **Clean Entry Point**
-The new `gradio_demo.py` is extremely clean:
-```python
-from src.ui.gradio_interface import SoccerVideoInterface
-from src.config import DEFAULT_SERVER_NAME, DEFAULT_SERVER_PORT, DEFAULT_SHARE
+### 3. **AI-Powered Features**
+- **Video Analysis**: Uses Qwen2.5-VL model for soccer video analysis
+- **Text-to-Speech**: Uses ModelScope Cantonese TTS for commentary audio
+- **Video Processing**: Combines video with generated audio commentary
 
-def main():
-    interface = SoccerVideoInterface()
-    demo = interface.create_interface()
-    demo.launch(
-        server_name=DEFAULT_SERVER_NAME,
-        server_port=DEFAULT_SERVER_PORT,
-        share=DEFAULT_SHARE
-    )
-```
+### 4. **User Interface**
+- **Video Upload/Selection**: Upload videos or select from gallery
+- **Audio Playback**: Play generated commentary audio separately
+- **Video Gallery**: Pre-loaded sample soccer videos
+- **Real-time Processing**: Process videos with AI-generated commentary
 
 ## How to Use
 
 ```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the application
 python gradio_demo.py
+
+# Test TTS functionality
+python test_tts.py
 ```
 
 ## Benefits of This Refactoring
@@ -80,7 +82,7 @@ from src.services.tts_service import TTSService
 
 # Use the complete pipeline
 pipeline = SoccerAnalysisPipeline()
-result_video, commentary = pipeline.process_video("path/to/video.mp4")
+result_video, audio_path, commentary = pipeline.process_video("path/to/video.mp4")
 
 # Or use individual services
 analyzer = VideoAnalyzer()
@@ -88,4 +90,12 @@ commentary = analyzer.analyze_video("path/to/video.mp4")
 
 tts = TTSService()
 audio_path = tts.generate_audio(commentary)
-``` 
+```
+
+## TTS Integration
+
+The application now includes full TTS functionality using ModelScope:
+- **Model**: `speech_tts/speech_sambert-hifigan_tts_jiajia_Cantonese_16k`
+- **Language**: Cantonese Chinese
+- **Output**: WAV audio files
+- **UI Integration**: Audio player in Gradio interface 

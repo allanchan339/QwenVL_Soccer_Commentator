@@ -16,24 +16,24 @@ class SoccerAnalysisPipeline:
         self.tts_service = TTSService()
         self.video_processor = VideoProcessor()
     
-    def process_video(self, video_path: str) -> Tuple[Optional[str], str]:
+    def process_video(self, video_path: str) -> Tuple[Optional[str], Optional[str], str]:
         """Process a soccer video through the complete analysis pipeline.
         
         Args:
             video_path: Path to the video file to process
             
         Returns:
-            Tuple of (processed_video_path, commentary_text)
+            Tuple of (processed_video_path, audio_path, commentary_text)
         """
         if not video_path:
-            return None, "No video provided for processing"
+            return None, None, "No video provided for processing"
         
         try:
             # Step 1: Analyze video to generate commentary
             commentary = self.video_analyzer.analyze_video(video_path)
             
             if commentary.startswith("Error"):
-                return video_path, commentary
+                return video_path, None, commentary
             
             # Step 2: Generate TTS audio from commentary
             audio_path = self.tts_service.generate_audio(commentary)
@@ -43,8 +43,8 @@ class SoccerAnalysisPipeline:
                 video_path, audio_path, commentary
             )
             
-            return final_video_path, final_commentary
+            return final_video_path, audio_path, final_commentary
             
         except Exception as e:
             error_msg = f"Error in video processing pipeline: {str(e)}"
-            return video_path, error_msg 
+            return video_path, None, error_msg 

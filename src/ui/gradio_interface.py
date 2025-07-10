@@ -90,6 +90,10 @@ class SoccerVideoInterface:
                         label="Processed Video with Commentary",
                         height=300
                     )
+                    audio_output = gr.Audio(
+                        label="Generated Commentary Audio",
+                        type="filepath"
+                    )
                     output_text = gr.Textbox(
                         label="Generated Commentary",
                         placeholder="Commentary will appear here...",
@@ -100,7 +104,7 @@ class SoccerVideoInterface:
             upload_button.click(
                 fn=self.pipeline.process_video,
                 inputs=[video_input],
-                outputs=[processed_video_output, output_text]
+                outputs=[processed_video_output, audio_output, output_text]
             )
             
         return demo 
