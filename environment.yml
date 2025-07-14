@@ -4,7 +4,6 @@ name: cosyvoice
 # THG: integrated musetalk requirements.txt 
 
 channels:
-  - defaults
   - conda-forge
 dependencies:
   - python=3.10
@@ -33,7 +32,7 @@ dependencies:
   - pydantic==2.7.0
   - rich==13.7.1
   - pysoundfile==0.12.1 # Renamed from soundfile
-  - tensorboard==2.12.0 # Updated from new list
+  - tensorboard>=2.16.1 # Updated from new list
   - transformers==4.39.2 # Updated from new list
   - uvicorn==0.30.0
   - huggingface_hub==0.30.2 # New
@@ -45,16 +44,16 @@ dependencies:
   - einops==0.8.1
   - ffmpeg-python
   - pyworld==0.3.4
+  - tensorflow-gpu>=2.16.0
+  - wget
   - pip:
-    - --index-url https://download.pytorch.org/whl/cu128
+    - --extra-index-url https://download.pytorch.org/whl/cu126
     - --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
     # Torch packages
-    - torch
-    - torchvision
-    - torchaudio
+    - torch==2.6.0
+    - torchvision==0.21.0
+    - torchaudio==2.6.0
     # Pip-only packages
-    - tensorflow==2.12.0 # Why musetalk want tensorflow?
-    - wget==3.2
     - protobuf==4.25
     - edge-tts>=6.1.0
     - conformer==0.3.2
@@ -63,8 +62,8 @@ dependencies:
     - HyperPyYAML==1.2.2
     - modelscope==1.20.0
     - onnx==1.16.0
-    - onnxruntime-cuda==1.18.0; sys_platform == 'linux'
-    - onnxruntime==1.18.0; sys_platform == 'darwin' or sys_platform == 'win32'
+    - onnxruntime-gpu>=1.18.0; sys_platform == 'linux'
+    - onnxruntime>=1.18.0; sys_platform == 'darwin' or sys_platform == 'win32'
     - openai-whisper==20231117
     - tensorrt-cu12==10.0.1; sys_platform == 'linux'
     - tensorrt-cu12-bindings==10.0.1; sys_platform == 'linux'
