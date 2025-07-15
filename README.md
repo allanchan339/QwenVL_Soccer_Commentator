@@ -10,9 +10,8 @@ This project has been refactored to follow a clean, modular architecture with pr
 │   ├── config.py                    # Centralized configuration
 │   ├── services/                    # Business logic services
 │   │   ├── __init__.py
-│   │   ├── minimax_tts.py          # Minimax TTS API wrapper
 │   │   ├── soccer_pipeline.py      # Main processing pipeline
-│   │   ├── tts_service.py          # ModelScope TTS service
+│   │   ├── tts_service.py          # Edge-TTS service
 │   │   ├── video_analysis.py       # Video analysis with Qwen model
 │   │   └── video_processor.py      # Video processing and combining
 │   ├── ui/                          # User interface components
@@ -43,7 +42,7 @@ This project has been refactored to follow a clean, modular architecture with pr
 
 ### 3. **AI-Powered Features**
 - **Video Analysis**: Uses Qwen2.5-VL model for soccer video analysis
-- **Text-to-Speech**: Uses ModelScope Cantonese TTS for commentary audio
+- **Text-to-Speech**: Uses Microsoft Edge-TTS for commentary audio
 - **Video Processing**: Combines video with generated audio commentary
 
 ### 4. **User Interface**
@@ -92,10 +91,76 @@ tts = TTSService()
 audio_path = tts.generate_audio(commentary)
 ```
 
-## TTS Integration
+## TTS Integration (Edge-TTS)
 
-The application now includes full TTS functionality using ModelScope:
-- **Model**: `speech_tts/speech_sambert-hifigan_tts_jiajia_Cantonese_16k`
-- **Language**: Cantonese Chinese
-- **Output**: WAV audio files
-- **UI Integration**: Audio player in Gradio interface 
+The application uses Microsoft's Edge-TTS for high-quality speech synthesis:
+
+### Features:
+- **Provider**: Microsoft Edge TTS
+- **Languages**: Supports 100+ languages including Chinese
+- **Voices**: Multiple Chinese voices (male/female)
+- **Benefits**: Free, fast, high-quality, no API key needed
+- **Default Voice**: `zh-CN-YunxiNeural` (Chinese male)
+
+### Quick Setup:
+```bash
+# Install edge-tts (included in requirements.txt)
+pip install edge-tts>=6.1.0
+
+# Test the TTS integration
+python example_edge_tts.py
+
+# Run comprehensive TTS tests
+python test_tts.py
+```
+
+### Usage Examples:
+
+#### Basic Usage:
+```python
+from src.services.tts_service import TTSService
+
+# Initialize TTS service
+tts = TTSService()
+audio_path = tts.generate_audio("这是一个测试文本")
+```
+
+#### Voice Customization:
+```python
+# Change default voice
+tts.set_edge_voice("zh-CN-XiaoxiaoNeural")  # Female voice
+audio_path = tts.generate_audio("女性语音测试")
+
+# Or specify voice per generation
+audio_path = tts.generate_audio(
+    "临时使用不同语音", 
+    voice="zh-CN-YunyeNeural"
+)
+```
+
+#### Pipeline Integration:
+```python
+from src.services.soccer_pipeline import SoccerAnalysisPipeline
+
+# Initialize pipeline
+pipeline = SoccerAnalysisPipeline()
+
+# Process video with specific voice
+result_video, audio, commentary = pipeline.process_video(
+    "video.mp4", 
+    voice="zh-CN-XiaoxiaoNeural"
+)
+```
+
+### Available Chinese Voices:
+- `zh-CN-YunxiNeural` - Male (default)
+- `zh-CN-XiaoxiaoNeural` - Female  
+- `zh-CN-YunyeNeural` - Male
+- `zh-CN-XiaoyiNeural` - Female
+- And many more... (use `get_edge_voices()` to list all)
+
+### Configuration:
+The default voice can be configured in `src/config.py`:
+```python
+DEFAULT_EDGE_VOICE = "zh-CN-YunxiNeural"
+``` 

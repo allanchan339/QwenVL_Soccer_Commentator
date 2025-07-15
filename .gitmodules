@@ -4,3 +4,6 @@
 [submodule "MuseTalk"]
 	path = MuseTalk
 	url = https://github.com/TMElyralab/MuseTalk
+[submodule "PaddleSpeech"]
+	path = PaddleSpeech
+	url = https://github.com/PaddlePaddle/PaddleSpeech.git
