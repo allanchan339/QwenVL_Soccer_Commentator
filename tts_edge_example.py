@@ -12,12 +12,20 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from src.services.tts_service import TTSService
 
+def ensure_directory_exists(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
 async def example_edge_tts_usage():
     """Demonstrate edge-tts usage."""
     print("=== Edge-TTS Integration Example ===\n")
     
-    # Initialize TTS service
-    tts = TTSService()
+    # Set output directory for EdgeTTS
+    output_dir = os.path.join('temp_audio', 'edgetts')
+    ensure_directory_exists(output_dir)
+    
+    # Initialize TTS service with custom output directory
+    tts = TTSService(output_dir=output_dir)
     
     # Example 1: Basic text-to-speech
     print("1. Basic TTS generation:")
@@ -79,7 +87,7 @@ async def example_edge_tts_usage():
         ("zh-HK-HiuMaanNeural", "Cantonese Female 2"),
         ("zh-HK-WanLungNeural", "Cantonese Male")
     ]
-    cantonese_text = "你好，呢度係廣東話測試。"  # "Hello, this is a Cantonese test."
+    cantonese_text = "喂！三点几嚟，饮茶先呢，做咁多都冇用嘅，老细唔锡你嘅呢"  # "Hello, this is a Cantonese test."
     for voice, description in cantonese_voices:
         print(f"   Testing {description} ({voice}):")
         audio_path = tts.generate_audio(
@@ -93,7 +101,7 @@ async def example_edge_tts_usage():
             print(f"   ❌ Failed with voice {voice}")
     
     print(f"\n=== Example Complete ===")
-    print("Generated audio files are saved in the temp_audio/ directory")
+    print("Generated audio files are saved in the temp_audio/edgetts/ directory")
 
 if __name__ == "__main__":
     asyncio.run(example_edge_tts_usage())

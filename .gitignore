@@ -152,3 +152,4 @@ local_settings.py
 Thumbs.db
 CosyVoice/pretrained_models
 pretrained_models
+temp_audio

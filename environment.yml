@@ -45,12 +45,14 @@ dependencies:
   - ffmpeg-python
   - pyworld==0.3.4
   - tensorflow-gpu>=2.16.0
-  - wget
   - protobuf>=4.25
   - deepspeed>=0.15.1
   - fastapi-cli>=0.0.4
   - onnxruntime>=1.19.2
   - onnx
+  #paddlespeech required 
+  - libsndfile 
+  - bzip2
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cu126
     - --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
@@ -72,5 +74,24 @@ dependencies:
     - tensorrt-cu12-libs==10.0.1; sys_platform == 'linux'
     - wetext==0.0.4
 
-  # failed to install via conda (run-time error)
+    # paddle tts support (only pip)
+    - pytest-runner
+    - g2pM
+    - flatten_dict
+    - jsonlines
+    - kaldiio
+    - loguru
+    - nara-wpe
+    - paddlespeech-feat
+    - pathos
+    - ppdiffusers>=0.9.0
+    - pyloudnorm
+    - resampy
+    - sacrebleu
+    # - g2pen 
+    - editdistance
+    - aistudio-sdk==0.2.6
+    
+    # failed to install via conda (run-time error)
     - pyarrow==18.1.0
+    - wget
