@@ -150,3 +150,5 @@ local_settings.py
 
 # System files
 Thumbs.db
+CosyVoice/pretrained_models
+pretrained_models

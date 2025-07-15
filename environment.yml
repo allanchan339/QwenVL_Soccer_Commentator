@@ -1,10 +1,11 @@
-name: cosyvoice
+name: SoCommVoice
 # LLM: integrated modelscope for Qwen2.5VL calling
 # TTS: integrated edge_tts & cosyvoice requirements.txt 
 # THG: integrated musetalk requirements.txt 
 
 channels:
   - conda-forge
+
 dependencies:
   - python=3.10
   - pip
@@ -28,7 +29,6 @@ dependencies:
   - networkx==3.1
   - omegaconf # Version updated from new list
   - openai>=1.0.0
-  - pyarrow>=18.1.0
   - pydantic==2.7.0
   - rich==13.7.1
   - pysoundfile==0.12.1 # Renamed from soundfile
@@ -71,3 +71,6 @@ dependencies:
     - tensorrt-cu12-bindings==10.0.1; sys_platform == 'linux'
     - tensorrt-cu12-libs==10.0.1; sys_platform == 'linux'
     - wetext==0.0.4
+
+  # failed to install via conda (run-time error)
+    - pyarrow==18.1.0
