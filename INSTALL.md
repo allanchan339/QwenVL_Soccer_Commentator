@@ -46,7 +46,7 @@ sudo yum install sox sox-devel
 ### Install additional dependencies for PaddleSpeech:
 ```bash
 pip install paddlespeech paddlepaddle --no-deps
-pip install yacs g2p-en opencc pypinyin pypinyin-dict opencc-python-reimplemented braceexpand ToJyutping webrtcvad zhon
+pip install yacs g2p-en opencc pypinyin pypinyin-dict opencc-python-reimplemented braceexpand ToJyutping webrtcvad zhon timer
 ```
 
 ## Download pre-trained models
