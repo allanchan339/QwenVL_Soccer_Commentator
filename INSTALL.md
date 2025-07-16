@@ -29,14 +29,15 @@ conda activate SoCommVoice
 # Install dependencies related to musetalk
 pip install --no-cache-dir -U openmim
 mim install mmengine 
-mim install "mmcv==2.1.0" 
-mim install "mmdet>=3.1.0" 
-mim install "mmpose>=1.1.0" 
+mim install "mmcv==2.1.0"  # this version support CUDA 12.8
+mim install "mmdet==3.2.0" # 3.3 is not compatabile with mmpose 1.3.2 
+mim install "mmpose>=1.1.0" # installed version is 1.3.2
+
+
 ```
 
 ### Install additional dependencies for CosyVoice:
 ```bash
-pip install wget # although conda should install wget correctly, unfortunely it didnt.
 # If you encounter sox compatibility issues
 # ubuntu
 sudo apt-get install sox libsox-dev
@@ -47,6 +48,7 @@ sudo yum install sox sox-devel
 ### Install additional dependencies for PaddleSpeech:
 ```bash
 pip install paddlespeech paddlepaddle --no-deps
+pip install yacs g2p-en opencc pypinyin pypinyin-dict opencc-python-reimplemented braceexpand ToJyutping webrtcvad zhon
 ```
 
 ### Download the pre-trained models and install CosyVoice-ttsfrd:
@@ -54,6 +56,7 @@ pip install paddlespeech paddlepaddle --no-deps
 # Download the CosyVoice model
 python download_model_cosyvoice.py
 
+# Install the CosyVoice-ttsfrd model (Optional, if not installed, wetext will be used)
 cd pretrained_models/CosyVoice-ttsfrd/
 unzip resource.zip -d .
 pip install ttsfrd_dependency-0.1-py3-none-any.whl

@@ -94,4 +94,6 @@ dependencies:
     
     # failed to install via conda (run-time error)
     - pyarrow==18.1.0
+
+    # cosyvoice require pypi version wget
     - wget
