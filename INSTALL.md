@@ -29,11 +29,9 @@ conda activate SoCommVoice
 # Install dependencies related to musetalk
 pip install --no-cache-dir -U openmim
 mim install mmengine 
-mim install "mmcv==2.1.0"  # this version support CUDA 12.8
-mim install "mmdet==3.2.0" # 3.3 is not compatabile with mmpose 1.3.2 
-mim install "mmpose>=1.1.0" # installed version is 1.3.2
-
-
+mim install "mmcv==2.2.0"  # ref to https://mmcv.readthedocs.io/en/latest/get_started/installation.html for more details, mmcv 2.2.0 is the only stable version of cuda 12.1 (or above?) and torch 2.4 (or above)?
+mim install "mmdet>=3.1.0" # mmdet 3.3.0 requires mmcv<2.2.0,>=2.0.0rc4; extra == "mim", but you have mmcv 2.2.0 which is incompatible. (but mmcv 2.2.0 is the only stable version for cuda 12+)
+mim install "mmpose>=1.1.0" # mmpose 1.3.2 requires mmdet<3.3.0,>=3.0.0; extra == "mim", but you have mmdet 3.3.0 which is incompatible. (same reason as above)
 ```
 
 ### Install additional dependencies for CosyVoice:
@@ -51,6 +49,7 @@ pip install paddlespeech paddlepaddle --no-deps
 pip install yacs g2p-en opencc pypinyin pypinyin-dict opencc-python-reimplemented braceexpand ToJyutping webrtcvad zhon
 ```
 
+## Download pre-trained models
 ### Download the pre-trained models and install CosyVoice-ttsfrd:
 ```bash
 # Download the CosyVoice model
@@ -61,4 +60,11 @@ cd pretrained_models/CosyVoice-ttsfrd/
 unzip resource.zip -d .
 pip install ttsfrd_dependency-0.1-py3-none-any.whl
 pip install ttsfrd-0.4.2-cp310-cp310-linux_x86_64.whl
+```
+
+### Download the pre-trained models and install MuseTalk:
+```bash
+# Download the MuseTalk model
+cd MuseTalk
+sh ./download_weights.sh
 ```
