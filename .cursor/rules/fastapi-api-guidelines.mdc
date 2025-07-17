@@ -1,0 +1,14 @@
+# FastAPI API Development Guidelines
+
+- Use Pydantic models for request/response validation.
+- Use FastAPI's dependency injection for managing dependencies.
+- Define clear, RESTful API routes with APIRouter.
+- Use BackgroundTasks or Celery for background processing.
+- Implement robust authentication/authorization (OAuth 2.0, JWT).
+- Auto-generate API docs with OpenAPI.
+- Plan for API versioning (URL prefixes or headers).
+- Configure CORS settings correctly.
+description:
+globs:
+alwaysApply: false
+---

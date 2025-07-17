@@ -1,0 +1,18 @@
+# Python Best Practices and Code Quality
+
+- Adhere to PEP 8 and use Ruff for linting and formatting.
+- Use explicit, readable, and Pythonic code; follow the Zen of Python and KISS principle.
+- Apply the Single Responsibility Principle and modular design; organize code into logical packages and modules.
+- All functions, methods, and class members must have comprehensive type annotations using the typing module.
+- Include Google-style docstrings for all functions, methods, and classes, explaining purpose, parameters, return values, exceptions, and usage examples.
+- Write thorough unit tests with pytest, aiming for 90%+ coverage, including edge cases.
+- Use robust exception handling with specific exception types and informative messages; avoid bare except clauses.
+- Employ the logging module for important events, warnings, and errors.
+- Favor reusable components and composition over inheritance.
+- Prioritize simplicity and maintainability; avoid over-engineering and over-modularization.
+- KISS principle is the most important principle in this project.
+
+description:
+globs:
+alwaysApply: true
+---

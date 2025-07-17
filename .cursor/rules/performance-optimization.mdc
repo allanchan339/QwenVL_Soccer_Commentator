@@ -1,0 +1,12 @@
+# Performance Optimization Guidelines
+
+- Use async/await for I/O-bound concurrency.
+- Apply functools.lru_cache, @cache, or fastapi.Depends caching where appropriate.
+- Use psutil or similar for resource monitoring.
+- Release unused resources to prevent memory leaks.
+- Use concurrent.futures or asyncio for concurrency.
+- Design efficient DB schemas, optimize queries, and use indexes wisely.
+description:
+globs:
+alwaysApply: false
+---

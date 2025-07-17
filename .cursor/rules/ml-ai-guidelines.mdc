@@ -1,0 +1,12 @@
+# ML/AI Guidelines
+
+- Use hydra or yaml for experiment configs.
+- Use dvc for data pipeline management and reproducibility.
+- Use git-lfs or cloud storage for model versioning.
+- Log experiments (params, results, environment).
+- Dedicate module/files for LLM prompt templates with version control.
+- Use efficient context management (e.g., deques for conversations).
+description:
+globs:
+alwaysApply: true
+---

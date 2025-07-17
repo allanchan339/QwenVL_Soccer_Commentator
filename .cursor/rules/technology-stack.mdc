@@ -1,0 +1,24 @@
+# Technology Stack Requirements
+
+- Python 3.10+
+- Dependency management: mamba / conda
+- Code formatting: Ruff
+- Type hinting: typing module (strict)
+- Testing: pytest
+- Documentation: Google style docstring
+- Environment: conda / venv
+- Containerization: docker, docker-compose
+- Async: async/await
+- Web: webrtc
+- Demo: gradio, streamlit
+- LLM: langchain, transformers
+- Vector DB: faiss, chroma (optional)
+- Experiment tracking: mlflow, tensorboard (optional)
+- HPO: optuna, hyperopt (optional)
+- Data: pandas, numpy, dask (optional), pyspark (optional)
+- Version control: git
+- Process: systemd, supervisor
+description:
+globs:
+alwaysApply: true
+---
