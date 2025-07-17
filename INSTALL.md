@@ -29,9 +29,12 @@ conda activate SoCommVoice
 # Install dependencies related to musetalk
 pip install --no-cache-dir -U openmim
 mim install mmengine 
-mim install "mmcv==2.2.0"  # ref to https://mmcv.readthedocs.io/en/latest/get_started/installation.html for more details, mmcv 2.2.0 is the only stable version of cuda 12.1 (or above?) and torch 2.4 (or above)?
-mim install "mmdet>=3.1.0" # mmdet 3.3.0 requires mmcv<2.2.0,>=2.0.0rc4; extra == "mim", but you have mmcv 2.2.0 which is incompatible. (but mmcv 2.2.0 is the only stable version for cuda 12+)
+mim install "mmcv==2.1.0"  # ref to https://mmcv.readthedocs.io/en/latest/get_started/installation.html for more details, mmcv 2.2.0 is the only stable version of cuda 12.1 (or above?) and torch 2.4 (or above)? buggy as they assert versioning  
+mim install "mmdet==3.2.0" # mmdet 3.3.0 requires mmcv<2.2.0,>=2.0.0rc4; extra == "mim", but you have mmcv 2.2.0 which is incompatible. (but mmcv 2.2.0 is the only stable version for cuda 12+ & torch 2.4+)
 mim install "mmpose>=1.1.0" # mmpose 1.3.2 requires mmdet<3.3.0,>=3.0.0; extra == "mim", but you have mmdet 3.3.0 which is incompatible. (same reason as above)
+
+#optional
+pip install -U "huggingface_hub[cli]" # u also need to login to download some models
 ```
 
 ### Install additional dependencies for CosyVoice:
