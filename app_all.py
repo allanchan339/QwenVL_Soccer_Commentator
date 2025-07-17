@@ -10,6 +10,7 @@ import glob
 import pickle
 from argparse import Namespace
 import copy
+import tempfile
 
 # Third-party imports
 import gradio as gr
@@ -25,6 +26,8 @@ import requests
 import gdown
 from omegaconf import OmegaConf
 from transformers import WhisperModel
+import asyncio
+from edge_tts import Communicate
 
 # Local imports
 from musetalk.utils.blending import get_image
@@ -488,6 +491,18 @@ def check_video(video: str) -> str:
     imageio.mimwrite(output_video, target_frames, 'FFMPEG', fps=25, codec='libx264', quality=9, pixelformat='yuv420p')
     return output_video
 
+def tts_generate(text, voice="en-US-AriaNeural"):
+    """Generate TTS audio from text using edge_tts and return the file path."""
+    if not text or not text.strip():
+        return None
+    temp_wav = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+    output_path = temp_wav.name
+    temp_wav.close()
+    async def synthesize():
+        communicate = Communicate(text, voice)
+        await communicate.save(output_path)
+    asyncio.run(synthesize())
+    return output_path
 
 def create_gradio_ui(
     vae, unet, pe, weight_dtype, audio_processor, whisper, timesteps, device
@@ -526,7 +541,25 @@ def create_gradio_ui(
 
         with gr.Row():
             with gr.Column():
-                audio = gr.Audio(label="Drving Audio",type="filepath")
+                # TTS text input and button
+                tts_text = gr.Textbox(label="Text for TTS", placeholder="Enter text to synthesize audio", lines=2)
+                # Add TTS voice dropdown
+                tts_voice = gr.Dropdown(
+                    label="TTS Voice",
+                    choices=[
+                        "en-US-AriaNeural",
+                        "en-US-GuyNeural",
+                        "zh-CN-XiaoxiaoNeural",
+                        "zh-CN-YunxiNeural",
+                        "zh-HK-HiuGaaiNeural",
+                        "zh-HK-HiuMaanNeural",
+                        "zh-HK-WanLungNeural"
+                    ],
+                    value="en-US-AriaNeural"
+                )
+                tts_btn = gr.Button("TTS")
+                # Audio input (can be replaced by TTS output)
+                audio = gr.Audio(label="Driving Audio", type="filepath")
                 video = gr.Video(label="Reference Video",sources=['upload'])
                 bbox_shift = gr.Number(label="BBox_shift value, px", value=0)
                 extra_margin = gr.Slider(label="Extra Margin", minimum=0, maximum=40, value=10, step=1)
@@ -570,6 +603,15 @@ def create_gradio_ui(
                 right_cheek_width
             ],
             outputs=[debug_image, debug_info]
+        )
+        # TTS button logic: when pressed, generate TTS audio and set audio input value
+        def tts_to_audio(text, voice):
+            audio_path = tts_generate(text, voice)
+            return audio_path
+        tts_btn.click(
+            fn=tts_to_audio,
+            inputs=[tts_text, tts_voice],
+            outputs=[audio]
         )
     return demo
 
