@@ -1,4 +1,7 @@
-"""Configuration module for the soccer video analysis application."""
+"""Configuration module for# TTS Configuration (Edge-TTS only)
+DEFAULT_EDGE_VOICE = "zh-CN-YunxiNeural"  # Default Chinese male voice
+
+# Audio Configurationoccer video analysis application."""
 
 import os
 from dotenv import load_dotenv
@@ -25,7 +28,12 @@ TARGET_WORDS_PER_SECOND = 4
 # Audio Configuration
 DEFAULT_AUDIO_FORMAT = 'mp3'
 
+# TTS Configuration
+DEFAULT_TTS_ENGINE = "edge_tts"  # Options: "edge_tts", "modelscope"
+DEFAULT_EDGE_VOICE = "zh-CN-YunxiNeural"  # Default Chinese male voice
+SUPPORTED_TTS_ENGINES = ["edge_tts", "modelscope"]
+
 # UI Configuration
 DEFAULT_SERVER_NAME = "0.0.0.0"
 DEFAULT_SERVER_PORT = 7860
-DEFAULT_SHARE = True 
+DEFAULT_SHARE = True
