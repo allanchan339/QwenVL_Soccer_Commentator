@@ -19,7 +19,8 @@ import asyncio
 from SoComm.models import load_all_models
 from SoComm.inpainting import inference, debug_inpainting
 from SoComm.tts import tts_generate
-from SoComm.utils import fast_check_ffmpeg, check_video
+from SoComm.utils import fast_check_ffmpeg, check_video, ensure_directory_exists, get_video_length, load_gallery_videos, tts_to_audio
+from SoComm.video_analyzer import VideoAnalyzer
 
 # --- Load environment variables for Video Analysis ---
 load_dotenv()
@@ -49,7 +50,7 @@ DEFAULT_SHARE = True
 # =================== MODEL LOADING & SETUP ===================
 
 # --- Load Inpainting/TTS models ---
-print("Loading SoComm models for Inpainting and TTS...")
+print("Loading SoComm models for TTS & THG...")
 (device, vae, unet, pe, weight_dtype, audio_processor, whisper, timesteps) = load_all_models(args.use_float16)
 print("SoComm models loaded successfully.")
 
@@ -67,94 +68,7 @@ if sys.platform == 'win32':
 
 # =================== UTILITY FUNCTIONS ===================
 
-def ensure_directory_exists(directory: str) -> None:
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-def get_video_length(video_path: str) -> float:
-    try:
-        cap = cv2.VideoCapture(video_path)
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        video_fps = cap.get(cv2.CAP_PROP_FPS)
-        cap.release()
-        return 0 if video_fps == 0 else total_frames / video_fps
-    except Exception as e:
-        print(f"Error getting video length: {e}")
-        return 0
-
-def load_gallery_videos() -> List[Tuple[str, str]]:
-    ensure_directory_exists(GALLERY_DIR)
-    video_files = []
-    for f in os.listdir(GALLERY_DIR):
-        if f.lower().endswith(VIDEO_EXTENSIONS):
-            file_path = os.path.join(GALLERY_DIR, f)
-            video_files.append((file_path, f))
-    return video_files
-
-def tts_to_audio(text, voice):
-    """Wrapper for TTS functionality."""
-    audio_path = tts_generate(text, voice)
-    return audio_path
-
 # =================== SERVICES (for Video Analysis) ===================
-
-class VideoAnalyzer:
-    """Service for analyzing soccer videos using Qwen2.5-VL model."""
-    def __init__(self):
-        self.client = None
-        if MODELSCOPE_SDK_TOKEN:
-            self.client = OpenAI(api_key=MODELSCOPE_SDK_TOKEN, base_url=MODELSCOPE_BASE_URL)
-    
-    def analyze_video(self, video_path: str) -> str:
-        if not video_path: return "No video provided for analysis"
-        if not self.client: return "Error: MODELSCOPE_SDK_TOKEN not configured. Please check your .env file."
-        try:
-            video_duration = get_video_length(video_path)
-            target_words = int(video_duration * TARGET_WORDS_PER_SECOND)
-            system_prompt = "You are a professional commentator for soccer. You are responsible for providing real-time commentary on the game."
-            user_prompt = f"Please describe this game, FOCUS ON the action of players and THE BALL, explicitly for goals, assists, fouls, offsides, yellow/red cards, substitutions, and corner kicks. The video is {round(video_duration, 0)} seconds long and therefore the commentary should be around {target_words} words long. You should also have an engaging tone. SKIP all non commentary content, 用廣東話回答, 不要使用英文, MAKE SURE YOU ARE SPOTTING CORRECT ACTIONS BEFORE ANSWERING"
-            video_messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": [
-                    {"type": "video", "video": f"file://{video_path}"},
-                    {"type": "text", "text": user_prompt},
-                ]},
-            ]
-            response = self.client.chat.completions.create(model=QWEN_MODEL, messages=video_messages, stream=False)
-            return response.choices[0].message.content
-        except Exception as e:
-            return f"Error analyzing video: {str(e)}"
-
-class VideoProcessor:
-    """Service for post-processing video (placeholder)."""
-    def __init__(self, output_dir: str = PROCESSED_VIDEOS_DIR):
-        self.output_dir = output_dir
-        ensure_directory_exists(self.output_dir)
-    
-    def combine_video_and_audio(self, video_path: str, commentary_text: str) -> Tuple[Optional[str], str]:
-        if not video_path: return None, "Please upload a video first."
-        try:
-            import shutil
-            base_name = os.path.splitext(os.path.basename(video_path))[0]
-            output_filename = f"{base_name}_analyzed.mp4"
-            output_path = os.path.join(self.output_dir, output_filename)
-            shutil.copy(video_path, output_path)
-            return output_path, commentary_text
-        except Exception as e:
-            return video_path, f"Error processing video: {str(e)}"
-
-class SoccerAnalysisPipeline:
-    """Pipeline for the video analysis part of the demo."""
-    def __init__(self):
-        self.video_analyzer = VideoAnalyzer()
-        self.video_processor = VideoProcessor()
-
-    def process_video(self, video_path: str) -> Tuple[Optional[str], str]:
-        if not video_path: return None, "No video provided."
-        commentary = self.video_analyzer.analyze_video(video_path)
-        if commentary.startswith("Error"): return video_path, commentary
-        final_video_path, final_commentary = self.video_processor.combine_video_and_audio(video_path, commentary)
-        return final_video_path, final_commentary
 
 # =================== MERGED GRADIO UI ===================
 
@@ -210,26 +124,38 @@ def merged_interface():
                     generate_btn = gr.Button("2. Generate Full Video", variant="primary")
                 
                 # Inpainting parameter controls (hidden by default, can be shown if needed)
-                bbox_shift = gr.Number(label="BBox Shift (px)", value=0, visible=False)
-                extra_margin = gr.Slider(label="Extra Margin", minimum=0, maximum=40, value=10, step=1, visible=False)
-                parsing_mode = gr.Radio(label="Parsing Mode", choices=["jaw", "raw"], value="jaw", visible=False)
-                left_cheek_width = gr.Slider(label="Left Cheek Width", minimum=20, maximum=160, value=90, step=5, visible=False)
-                right_cheek_width = gr.Slider(label="Right Cheek Width", minimum=20, maximum=160, value=90, step=5, visible=False)
+                # Move these to the bottom of the left column in a dropdown
+                # bbox_shift = gr.Number(label="BBox Shift (px)", value=0, visible=False)
+                # extra_margin = gr.Slider(label="Extra Margin", minimum=0, maximum=40, value=10, step=1, visible=False)
+                # parsing_mode = gr.Radio(label="Parsing Mode", choices=["jaw", "raw"], value="jaw", visible=False)
+                # left_cheek_width = gr.Slider(label="Left Cheek Width", minimum=20, maximum=160, value=90, step=5, visible=False)
+                # right_cheek_width = gr.Slider(label="Right Cheek Width", minimum=20, maximum=160, value=90, step=5, visible=False)
+                # Place at the bottom of the left column
+                with gr.Accordion("Advanced Inpainting Parameters", open=False):
+                    bbox_shift = gr.Number(label="BBox Shift (px)", value=0)
+                    extra_margin = gr.Slider(label="Extra Margin", minimum=0, maximum=40, value=10, step=1)
+                    parsing_mode = gr.Radio(label="Parsing Mode", choices=["jaw", "raw"], value="jaw")
+                    left_cheek_width = gr.Slider(label="Left Cheek Width", minimum=20, maximum=160, value=90, step=5)
+                    right_cheek_width = gr.Slider(label="Right Cheek Width", minimum=20, maximum=160, value=90, step=5)
 
             # --- RIGHT COLUMN: All outputs/results ---
             with gr.Column(scale=1, elem_id="right-col"):
-                gr.Markdown("### Test Inpainting Result (First Frame)")
-                debug_output_image = gr.Image(label="Test Inpainting Result (First Frame)")
-                gr.Markdown("### Parameter Information")
-                debug_output_info = gr.Textbox(label="Parameter Information", lines=4)
+                # Move Generated Video to the top
                 gr.Markdown("### Generated Video for Inpainting")
                 inpainting_output_video = gr.Video(label="Generated Video")
+                # Test Inpainting Result
+                gr.Markdown("### Test Inpainting Result (First Frame)")
+                debug_output_image = gr.Image(label="Test Inpainting Result (First Frame)")
+                # Parameter Information as dropdown/accordion
+                with gr.Accordion("Parameter Information", open=False):
+                    debug_output_info = gr.Textbox(label="Parameter Information", lines=4)
 
         # =================== EVENT HANDLERS ===================
-        pipeline = SoccerAnalysisPipeline()
+        video_analyzer = VideoAnalyzer()
         def process_analysis_video(video_path):
-            # Only return the commentary, not the video path
-            _, commentary = pipeline.process_video(video_path)
+            if not video_path:
+                return "No video provided."
+            commentary = video_analyzer.analyze_video(video_path)
             return commentary
         def select_gallery_video(evt: gr.SelectData) -> Optional[str]:
             selected_data = evt.value

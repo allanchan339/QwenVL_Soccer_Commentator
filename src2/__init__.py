@@ -1,1 +1,0 @@
-# Soccer Video Analysis Package 

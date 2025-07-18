@@ -43,4 +43,40 @@ def check_video(video: str) -> str:
         target_frames.append(frames[t_idx])
     import imageio
     imageio.mimwrite(output_video, target_frames, 'FFMPEG', fps=25, codec='libx264', quality=9, pixelformat='yuv420p')
-    return output_video 
+    return output_video
+
+def ensure_directory_exists(directory_path: str):
+    """
+    Ensures a directory exists. If it doesn't, it creates it.
+    """
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+
+def get_video_length(video_path: str) -> float:
+    import cv2
+    try:
+        cap = cv2.VideoCapture(video_path)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        video_fps = cap.get(cv2.CAP_PROP_FPS)
+        cap.release()
+        return 0 if video_fps == 0 else total_frames / video_fps
+    except Exception as e:
+        print(f"Error getting video length: {e}")
+        return 0
+
+def load_gallery_videos() -> list:
+    import os
+    GALLERY_DIR = "video_gallery"
+    VIDEO_EXTENSIONS = ('.mp4', '.avi', '.mov', '.mkv')
+    ensure_directory_exists(GALLERY_DIR)
+    video_files = []
+    for f in os.listdir(GALLERY_DIR):
+        if f.lower().endswith(VIDEO_EXTENSIONS):
+            file_path = os.path.join(GALLERY_DIR, f)
+            video_files.append((file_path, f))
+    return video_files
+
+def tts_to_audio(text, voice):
+    from .tts import tts_generate
+    audio_path = tts_generate(text, voice)
+    return audio_path 
