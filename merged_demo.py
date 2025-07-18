@@ -14,6 +14,7 @@ from openai import OpenAI
 import gradio as gr
 import sys
 import asyncio
+import argparse
 
 # --- Imports from SoComm for Inpainting/TTS ---
 from SoComm.models import load_all_models
@@ -27,11 +28,41 @@ load_dotenv()
 
 # =================== MODEL & APP CONFIGURATION ===================
 
-# --- Arguments for Inpainting/TTS (using hardcoded defaults) ---
-class AppArgs:
-    ffmpeg_path = r"ffmpeg-master-latest-win64-gpl-shared\bin"
-    use_float16 = True
-args = AppArgs()
+def parse_args():
+    parser = argparse.ArgumentParser(description="Soccer Video Analysis and Inpainting/TTS Demo")
+    # General paths and server
+    parser.add_argument('--ffmpeg_path', type=str, default=r"ffmpeg-master-latest-win64-gpl-shared\bin", help='Path to ffmpeg executable')
+    parser.add_argument('--use_float16', action='store_true', default=True, help='Use float16 for models')
+    parser.add_argument('--gallery_dir', type=str, default="video_gallery", help='Directory for video gallery')
+    parser.add_argument('--processed_videos_dir', type=str, default="processed_videos", help='Directory for processed videos')
+    parser.add_argument('--video_extensions', type=str, nargs='+', default=['.mp4', '.avi', '.mov', '.mkv'], help='Allowed video extensions')
+    parser.add_argument('--default_server_name', type=str, default="0.0.0.0", help='Gradio server name')
+    parser.add_argument('--default_server_port', type=int, default=7869, help='Gradio server port')
+    parser.add_argument('--default_share', action='store_true', default=True, help='Gradio share option')
+    # Model loading
+    parser.add_argument('--unet_model_path', type=str, default="./models/musetalkV15/unet.pth", help='Path to UNet model weights')
+    parser.add_argument('--vae_type', type=str, default="sd-vae", help='Type of VAE model')
+    parser.add_argument('--unet_config', type=str, default="./models/musetalkV15/musetalk.json", help='Path to UNet config')
+    parser.add_argument('--whisper_dir', type=str, default="./models/whisper", help='Directory for Whisper model')
+    # Video analysis
+    parser.add_argument('--qwen_model', type=str, default="Qwen/Qwen2.5-VL-72B-Instruct", help='Qwen model name')
+    parser.add_argument('--modelscope_base_url', type=str, default="https://api-inference.modelscope.cn/v1", help='Modelscope API base URL')
+    parser.add_argument('--target_words_per_second', type=int, default=4, help='Target words per second for commentary')
+    # Inpainting/Generation parameters
+    parser.add_argument('--inpainting_result_dir', type=str, default='./results/output', help='Directory for inpainting results')
+    parser.add_argument('--debug_result_dir', type=str, default='./results/debug', help='Directory for debug inpainting results')
+    parser.add_argument('--inpainting_fps', type=int, default=25, help='FPS for inpainting output')
+    parser.add_argument('--inpainting_batch_size', type=int, default=8, help='Batch size for inpainting')
+    parser.add_argument('--inpainting_output_vid_name', type=str, default='', help='Output video name for inpainting')
+    parser.add_argument('--inpainting_use_saved_coord', action='store_true', default=False, help='Use saved coordinates for inpainting')
+    parser.add_argument('--inpainting_audio_padding_left', type=int, default=2, help='Audio left padding for inpainting')
+    parser.add_argument('--inpainting_audio_padding_right', type=int, default=2, help='Audio right padding for inpainting')
+    parser.add_argument('--inpainting_version', type=str, default='v15', help='Inpainting model version')
+    # Video processing/check_video
+    parser.add_argument('--results_dir', type=str, default='./results', help='General results directory')
+    parser.add_argument('--output_dir', type=str, default='./results/output', help='General output directory')
+    parser.add_argument('--input_dir', type=str, default='./results/input', help='General input directory')
+    return parser.parse_args()
 
 # --- Configuration for Video Analysis ---
 MODELSCOPE_SDK_TOKEN = os.getenv("MODELSCOPE_SDK_TOKEN")
@@ -49,9 +80,17 @@ DEFAULT_SHARE = True
 
 # =================== MODEL LOADING & SETUP ===================
 
+args = parse_args()
+
 # --- Load Inpainting/TTS models ---
 print("Loading SoComm models for TTS & THG...")
-(device, vae, unet, pe, weight_dtype, audio_processor, whisper, timesteps) = load_all_models(args.use_float16)
+(device, vae, unet, pe, weight_dtype, audio_processor, whisper, timesteps) = load_all_models(
+    use_float16=args.use_float16,
+    unet_model_path=args.unet_model_path,
+    vae_type=args.vae_type,
+    unet_config=args.unet_config,
+    whisper_dir=args.whisper_dir
+)
 print("SoComm models loaded successfully.")
 
 # --- Check ffmpeg and add to PATH ---
@@ -72,7 +111,7 @@ if sys.platform == 'win32':
 
 # =================== MERGED GRADIO UI ===================
 
-def merged_interface():
+def merged_interface(args):
     """Defines the integrated Gradio UI for the soccer demo."""
     css = """#output_vid {max-width: 1024px; max-height: 576px}"""
     with gr.Blocks(theme=gr.themes.Soft(), css=css) as demo:
@@ -87,7 +126,7 @@ def merged_interface():
                     label="Video Gallery",
                     show_label=True,
                     elem_id="video_gallery",
-                    value=load_gallery_videos(),
+                    value=load_gallery_videos(args.gallery_dir, args.video_extensions),
                     columns=4, rows=2, object_fit="contain", allow_preview=False
                 )
                 
@@ -151,7 +190,11 @@ def merged_interface():
                     debug_output_info = gr.Textbox(label="Parameter Information", lines=4)
 
         # =================== EVENT HANDLERS ===================
-        video_analyzer = VideoAnalyzer()
+        video_analyzer = VideoAnalyzer(
+            qwen_model=args.qwen_model,
+            modelscope_base_url=args.modelscope_base_url,
+            target_words_per_second=args.target_words_per_second
+        )
         def process_analysis_video(video_path):
             if not video_path:
                 return "No video provided."
@@ -192,7 +235,15 @@ def merged_interface():
             fn=lambda video, bbox_s, extra_m, parsing_m, l_cheek, r_cheek: debug_inpainting(
                 video, bbox_s, extra_m, parsing_m, l_cheek, r_cheek,
                 device=device, vae=vae, unet=unet, pe=pe, 
-                weight_dtype=weight_dtype, timesteps=timesteps
+                weight_dtype=weight_dtype, timesteps=timesteps,
+                result_dir=args.debug_result_dir,
+                fps=args.inpainting_fps,
+                batch_size=args.inpainting_batch_size,
+                output_vid_name=args.inpainting_output_vid_name,
+                use_saved_coord=args.inpainting_use_saved_coord,
+                audio_padding_length_left=args.inpainting_audio_padding_left,
+                audio_padding_length_right=args.inpainting_audio_padding_right,
+                version=args.inpainting_version
             ),
             inputs=[inpainting_video_input, bbox_shift, extra_margin, parsing_mode, left_cheek_width, right_cheek_width],
             outputs=[debug_output_image, debug_output_info]
@@ -203,7 +254,15 @@ def merged_interface():
                 audio, video, bbox_s, extra_m, parsing_m, l_cheek, r_cheek,
                 device=device, vae=vae, unet=unet, pe=pe, 
                 weight_dtype=weight_dtype, audio_processor=audio_processor, 
-                whisper=whisper, timesteps=timesteps
+                whisper=whisper, timesteps=timesteps,
+                result_dir=args.inpainting_result_dir,
+                fps=args.inpainting_fps,
+                batch_size=args.inpainting_batch_size,
+                output_vid_name=args.inpainting_output_vid_name,
+                use_saved_coord=args.inpainting_use_saved_coord,
+                audio_padding_length_left=args.inpainting_audio_padding_left,
+                audio_padding_length_right=args.inpainting_audio_padding_right,
+                version=args.inpainting_version
             ),
             inputs=[driving_audio, inpainting_video_input, bbox_shift, extra_margin, parsing_mode, left_cheek_width, right_cheek_width],
             outputs=[inpainting_output_video, debug_output_info]
@@ -214,14 +273,14 @@ def merged_interface():
 # =================== MAIN EXECUTION ===================
 def main():
     """Initializes and launches the merged Gradio application."""
-    ensure_directory_exists(GALLERY_DIR)
-    ensure_directory_exists(PROCESSED_VIDEOS_DIR)
+    ensure_directory_exists(args.gallery_dir)
+    ensure_directory_exists(args.processed_videos_dir)
     
-    demo = merged_interface()
+    demo = merged_interface(args)
     demo.queue().launch(
-        server_name=DEFAULT_SERVER_NAME,
-        server_port=DEFAULT_SERVER_PORT,
-        share=DEFAULT_SHARE,
+        server_name=args.default_server_name,
+        server_port=args.default_server_port,
+        share=args.default_share,
         debug=True
     )
 

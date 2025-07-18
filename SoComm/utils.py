@@ -12,7 +12,7 @@ def fast_check_ffmpeg():
     except Exception:
         return False
 
-def check_video(video: str) -> str:
+def check_video(video: str, results_dir='./results', output_dir='./results/output', input_dir='./results/input') -> str:
     import imageio
     import os
     import re
@@ -22,10 +22,10 @@ def check_video(video: str) -> str:
     if file_name.startswith("outputxxx_"):
         return video
     output_file_name = "outputxxx_" + file_name
-    os.makedirs('./results', exist_ok=True)
-    os.makedirs('./results/output', exist_ok=True)
-    os.makedirs('./results/input', exist_ok=True)
-    output_video = os.path.join('./results/input', output_file_name)
+    os.makedirs(results_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(input_dir, exist_ok=True)
+    output_video = os.path.join(input_dir, output_file_name)
     reader = imageio.get_reader(video)
     fps = reader.get_meta_data()['fps']
     frames = [im for im in reader]
@@ -64,15 +64,13 @@ def get_video_length(video_path: str) -> float:
         print(f"Error getting video length: {e}")
         return 0
 
-def load_gallery_videos() -> list:
+def load_gallery_videos(gallery_dir="video_gallery", video_extensions=(".mp4", ".avi", ".mov", ".mkv")) -> list:
     import os
-    GALLERY_DIR = "video_gallery"
-    VIDEO_EXTENSIONS = ('.mp4', '.avi', '.mov', '.mkv')
-    ensure_directory_exists(GALLERY_DIR)
+    ensure_directory_exists(gallery_dir)
     video_files = []
-    for f in os.listdir(GALLERY_DIR):
-        if f.lower().endswith(VIDEO_EXTENSIONS):
-            file_path = os.path.join(GALLERY_DIR, f)
+    for f in os.listdir(gallery_dir):
+        if f.lower().endswith(tuple(video_extensions)):
+            file_path = os.path.join(gallery_dir, f)
             video_files.append((file_path, f))
     return video_files
 

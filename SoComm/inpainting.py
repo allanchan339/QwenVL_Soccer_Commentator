@@ -22,17 +22,19 @@ from tqdm import tqdm
 def debug_inpainting(
     video_path, bbox_shift, extra_margin=10, parsing_mode="jaw",
     left_cheek_width=90, right_cheek_width=90,
-    device=None, vae=None, unet=None, pe=None, weight_dtype=None, timesteps=None
+    device=None, vae=None, unet=None, pe=None, weight_dtype=None, timesteps=None,
+    result_dir='./results/debug', fps=25, batch_size=1, output_vid_name='', use_saved_coord=False,
+    audio_padding_length_left=2, audio_padding_length_right=2, version="v15"
 ):
     args = Namespace(
-        result_dir='./results/debug',
-        fps=25,
-        batch_size=1,
-        output_vid_name='',
-        use_saved_coord=False,
-        audio_padding_length_left=2,
-        audio_padding_length_right=2,
-        version="v15",
+        result_dir=result_dir,
+        fps=fps,
+        batch_size=batch_size,
+        output_vid_name=output_vid_name,
+        use_saved_coord=use_saved_coord,
+        audio_padding_length_left=audio_padding_length_left,
+        audio_padding_length_right=audio_padding_length_right,
+        version=version,
         extra_margin=extra_margin,
         parsing_mode=parsing_mode,
         left_cheek_width=left_cheek_width,
@@ -86,17 +88,19 @@ def inference(
     audio_path, video_path, bbox_shift, extra_margin=10, parsing_mode="jaw",
     left_cheek_width=90, right_cheek_width=90,
     device=None, vae=None, unet=None, pe=None, weight_dtype=None,
-    audio_processor=None, whisper=None, timesteps=None, progress=None
+    audio_processor=None, whisper=None, timesteps=None, progress=None,
+    result_dir='./results/output', fps=25, batch_size=8, output_vid_name='', use_saved_coord=False,
+    audio_padding_length_left=2, audio_padding_length_right=2, version="v15"
 ):
     args = Namespace(
-        result_dir='./results/output',
-        fps=25,
-        batch_size=8,
-        output_vid_name='',
-        use_saved_coord=False,
-        audio_padding_length_left=2,
-        audio_padding_length_right=2,
-        version="v15",
+        result_dir=result_dir,
+        fps=fps,
+        batch_size=batch_size,
+        output_vid_name=output_vid_name,
+        use_saved_coord=use_saved_coord,
+        audio_padding_length_left=audio_padding_length_left,
+        audio_padding_length_right=audio_padding_length_right,
+        version=version,
         extra_margin=extra_margin,
         parsing_mode=parsing_mode,
         left_cheek_width=left_cheek_width,
