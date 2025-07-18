@@ -10,7 +10,7 @@ import asyncio
 # Add src to path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
-from src.services.tts_service import TTSService
+from src2.services.tts_service import TTSService
 
 def ensure_directory_exists(directory):
     if not os.path.exists(directory):
