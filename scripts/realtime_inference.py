@@ -1,12 +1,18 @@
 import argparse
 import os
+import sys
+
+# Add the project root directory to sys.path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 from omegaconf import OmegaConf
 import numpy as np
 import cv2
 import torch
 import glob
 import pickle
-import sys
 from tqdm import tqdm
 import copy
 import json
@@ -318,8 +324,8 @@ if __name__ == "__main__":
     parser.add_argument("--ffmpeg_path", type=str, default="./ffmpeg-4.4-amd64-static/", help="Path to ffmpeg executable")
     parser.add_argument("--gpu_id", type=int, default=0, help="GPU ID to use")
     parser.add_argument("--vae_type", type=str, default="sd-vae", help="Type of VAE model")
-    parser.add_argument("--unet_config", type=str, default="./models/musetalk/musetalk.json", help="Path to UNet configuration file")
-    parser.add_argument("--unet_model_path", type=str, default="./models/musetalk/pytorch_model.bin", help="Path to UNet model weights")
+    parser.add_argument("--unet_config", type=str, default="./models/musetalkV15/musetalk.json", help="Path to UNet configuration file")
+    parser.add_argument("--unet_model_path", type=str, default="./models/musetalkV15/unet.pth", help="Path to UNet model weights")
     parser.add_argument("--whisper_dir", type=str, default="./models/whisper", help="Directory containing Whisper model")
     parser.add_argument("--inference_config", type=str, default="configs/inference/realtime.yaml")
     parser.add_argument("--bbox_shift", type=int, default=0, help="Bounding box shift value")
@@ -330,17 +336,28 @@ if __name__ == "__main__":
     parser.add_argument("--audio_padding_length_right", type=int, default=2, help="Right padding length for audio")
     parser.add_argument("--batch_size", type=int, default=20, help="Batch size for inference")
     parser.add_argument("--output_vid_name", type=str, default=None, help="Name of output video file")
-    parser.add_argument("--use_saved_coord", action="store_true", help='Use saved coordinates to save time')
-    parser.add_argument("--saved_coord", action="store_true", help='Save coordinates for future use')
+    parser.add_argument("--use_saved_coord", type=bool, default=True, help='Use saved coordinates to save time')
+    parser.add_argument("--saved_coord", type=bool, default=False, help='Save coordinates for future use')
     parser.add_argument("--parsing_mode", default='jaw', help="Face blending parsing mode")
     parser.add_argument("--left_cheek_width", type=int, default=90, help="Width of left cheek region")
     parser.add_argument("--right_cheek_width", type=int, default=90, help="Width of right cheek region")
     parser.add_argument("--skip_save_images",
-                       action="store_true",
+                       type=bool,
+                       default=True,
                        help="Whether skip saving images for better generation speed calculation",
                        )
 
     args = parser.parse_args()
+
+    # Adjust config and model paths based on version
+    if args.version == "v15":
+        args.unet_model_path = "./models/musetalkV15/unet.pth"
+        args.unet_config = "./models/musetalkV15/musetalk.json"
+        args.vae_type = "sd-vae"
+    else:  # v1
+        args.unet_model_path = "./models/musetalk/pytorch_model.bin"
+        args.unet_config = "./models/musetalk/musetalk.json"
+        args.vae_type = "mse"
 
     # Configure ffmpeg path
     if not fast_check_ffmpeg():

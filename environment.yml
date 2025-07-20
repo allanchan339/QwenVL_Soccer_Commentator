@@ -104,3 +104,14 @@ dependencies:
 
     # MuseTalk require pypi version 
     - huggingface_hub[cli]
+
+    # # mockingbird require 
+    # - sounddevice
+    # - SoundFile
+    # - PyWavelets
+    # - torch_complex
+    # - espent
+    # - umap-learn
+    # - monotonic-align==1.0.0
+    # - unidecode
+
