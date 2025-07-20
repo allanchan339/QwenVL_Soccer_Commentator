@@ -157,16 +157,26 @@ def merged_interface(args):
             # --- LEFT COLUMN: All user actions/inputs ---
             with gr.Column(scale=1, elem_id="left-col"):
                 gr.Markdown("### 1. Select or Upload Soccer Clip")
-                video_input = gr.Video(label="Upload or Select Soccer Clip", interactive=True)
                 
-                gallery = gr.Gallery(
-                    label="Video Gallery",
-                    show_label=True,
-                    elem_id="video_gallery",
-                    value=load_gallery_videos(args.gallery_dir, args.video_extensions),
-                    columns=4, rows=2, object_fit="contain", allow_preview=False
-                )
+                # Navigation tabs for soccer clip input/gallery
+                with gr.Tabs():
+                    with gr.TabItem("1. Upload Video"):
+                        video_input = gr.Video(label="Upload Soccer Clip", interactive=True)
+                    
+                    with gr.TabItem("2. Video Gallery"):
+                        gr.Markdown("**Select from existing soccer clips:**")
+                        gallery = gr.Gallery(
+                            label="Video Gallery",
+                            show_label=True,
+                            elem_id="video_gallery",
+                            value=load_gallery_videos(args.gallery_dir, args.video_extensions),
+                            columns=4, rows=2, object_fit="contain", allow_preview=False
+                        )
+                        refresh_gallery_btn = gr.Button("🔄 Refresh Video Gallery", size="sm")
                 
+                # System prompt textbox for video analysis
+                default_system_prompt = "You are a professional commentator for soccer. You are responsible for providing real-time commentary on the game.  Describe this game scene, FOCUS ON the action of players and THE BALL, explicitly for goals, assists, fouls, offsides, yellow/red cards, substitutions, and corner kicks. You should also have an engaging tone. SKIP all non commentary content, 用廣東話回答, 不要使用英文, MAKE SURE YOU ARE SPOTTING CORRECT ACTIONS BEFORE ANSWERING"
+                system_prompt_box = gr.Textbox(label="System Prompt for Soccer Commentary AI", value=default_system_prompt, lines=3)
                 analyze_btn = gr.Button("Analyze Video", variant="primary")
                 
                 commentary_tts_box = gr.Textbox(label="Generated Commentary / Text for TTS", placeholder="Commentary will appear here, or type your own text for TTS...", lines=4, interactive=True)
@@ -256,21 +266,35 @@ def merged_interface(args):
         
         # Helper functions for real-time inpainting
         
-        def process_analysis_video(video_path, progress=gr.Progress(track_tqdm=True)):
+        def process_analysis_video(video_path, system_prompt, progress=gr.Progress(track_tqdm=True)):
             if not video_path:
-                return "No video provided."
-            commentary = video_analyzer.analyze_video(video_path)
-            return commentary
+                gr.Info("❌ No video provided. Please upload or select a video first.")
+                return "No video provided. Please upload or select a video first."
+            
+            try:
+                gr.Info("🔄 Starting video analysis... This may take a few moments.")
+                commentary = video_analyzer.analyze_video(video_path, system_prompt=system_prompt)
+                gr.Info("✅ Video analysis completed successfully!")
+                return commentary
+            except Exception as e:
+                gr.Info(f"❌ Error analyzing video: {str(e)}")
+                return f"Error analyzing video: {str(e)}"
         def select_gallery_video(evt: gr.SelectData) -> Optional[str]:
             selected_data = evt.value
             if isinstance(selected_data, dict) and 'video' in selected_data and isinstance(selected_data['video'], dict) and 'path' in selected_data['video']:
-                return selected_data['video']['path']
+                video_path = selected_data['video']['path']
+                gr.Info(f"✅ Selected video: {os.path.basename(video_path)}")
+                return video_path
             elif isinstance(selected_data, tuple) and len(selected_data) > 0:
-                return selected_data[0]
+                video_path = selected_data[0]
+                gr.Info(f"✅ Selected video: {os.path.basename(video_path)}")
+                return video_path
             elif isinstance(selected_data, str):
+                gr.Info(f"✅ Selected video: {os.path.basename(selected_data)}")
                 return selected_data
             else:
                 print(f"Warning: Unexpected data type or structure from gallery selection: {type(selected_data)}. Value: {selected_data}")
+                gr.Info("❌ Failed to select video. Please try again.")
                 return None
         
         def select_avatar_from_gallery(evt: gr.SelectData) -> Tuple[str, str]:
@@ -301,6 +325,9 @@ def merged_interface(args):
         # Gallery selection sets the video input
         gallery.select(fn=select_gallery_video, outputs=[video_input])
         
+        # Refresh video gallery
+        refresh_gallery_btn.click(fn=load_gallery_videos, inputs=[gr.State(args.gallery_dir), gr.State(args.video_extensions)], outputs=[gallery])
+        
 
         
         # Avatar gallery selection sets the avatar ID
@@ -311,12 +338,25 @@ def merged_interface(args):
         # Analyze button triggers video analysis and commentary (only updates the merged box)
         analyze_btn.click(
             fn=process_analysis_video,
-            inputs=[video_input],
+            inputs=[video_input, system_prompt_box],
             outputs=[commentary_tts_box]
         )
         # TTS: output to driving_audio
+        def tts_with_feedback(text, voice):
+            if not text or not text.strip():
+                gr.Info("❌ No text provided for TTS. Please enter text or analyze a video first.")
+                return None
+            try:
+                gr.Info("🔄 Generating speech... Please wait.")
+                audio_path = tts_to_audio(text, voice)
+                gr.Info("✅ Speech generated successfully!")
+                return audio_path
+            except Exception as e:
+                gr.Info(f"❌ Error generating speech: {str(e)}")
+                return None
+        
         tts_btn.click(
-            fn=tts_to_audio,
+            fn=tts_with_feedback,
             inputs=[commentary_tts_box, tts_voice],
             outputs=[driving_audio]
         )
@@ -345,16 +385,16 @@ def merged_interface(args):
             """Create a real-time avatar."""
             if not avatar_id or not avatar_id.strip():
                 gr.Info("Error: Please enter an avatar ID")
-                return None, "Error: Please enter an avatar ID"
+                return "Error: Please enter an avatar ID"
             if not video_path:
                 gr.Info("Error: Please upload a reference video")
-                return None, "Error: Please upload a reference video"
+                return "Error: Please upload a reference video"
             
             # Check if avatar already exists
             avatar_dir = os.path.join("results", "v15", "avatars", avatar_id.strip())
             if os.path.exists(avatar_dir):
                 gr.Warning(f"Avatar ID '{avatar_id.strip()}' already exists! Please choose a different name.")
-                return None, f"❌ Avatar ID '{avatar_id.strip()}' already exists! Please rename and try again."
+                return f"❌ Avatar ID '{avatar_id.strip()}' already exists! Please rename and try again."
             
             try:
                 progress(0, desc="Starting avatar creation...")
@@ -406,10 +446,10 @@ def merged_interface(args):
                 """
                 
                 gr.Info(f"Avatar '{avatar_id}' created successfully! Ready for real-time generation.")
-                return param_info, f"✅ Avatar '{avatar_id}' created successfully! Ready for real-time generation."
+                return param_info
             except Exception as e:
                 gr.Info(f"Error creating avatar: {str(e)}")
-                return None, f"❌ Error creating avatar: {str(e)}"
+                return f"❌ Error creating avatar: {str(e)}"
         
         def generate_realtime_video(avatar_id, audio_path, bbox_s, extra_m, parsing_m, l_cheek, r_cheek, progress=gr.Progress(track_tqdm=True)):
             """Generate real-time video using existing avatar."""
@@ -476,22 +516,22 @@ PROCESSING STATS:
 • Audio File: {os.path.basename(audio_path)}
 • Output: {output_video if output_video else 'Generated successfully'}"""
                 
-                return output_video, param_info, f"✅ Video generation completed successfully!"
+                return output_video, param_info
             except Exception as e:
-                return None, f"Error generating real-time video: {str(e)}", f"❌ Error generating video: {str(e)}"
+                return None, f"❌ Error generating video: {str(e)}"
         
         # Create Avatar button
         create_avatar_btn.click(
             fn=create_avatar,
             inputs=[avatar_id_input, avatar_video_input, bbox_shift, extra_margin, parsing_mode, left_cheek_width, right_cheek_width],
-            outputs=[debug_output_info, progress_display]
+            outputs=[debug_output_info]
         )
         
         # Generate Real-Time Video button
         realtime_generate_btn.click(
             fn=generate_realtime_video,
             inputs=[avatar_id_input, driving_audio, bbox_shift, extra_margin, parsing_mode, left_cheek_width, right_cheek_width],
-            outputs=[realtime_output_video, debug_output_info, progress_display]
+            outputs=[realtime_output_video, debug_output_info]
         )
         gr.HTML("""<style>#left-col, #right-col { padding: 1.5rem; } #video_gallery { min-height: 200px; } #avatar_gallery { min-height: 200px; margin-top: 1rem; }</style>""")
     return demo
