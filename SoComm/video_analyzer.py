@@ -19,14 +19,15 @@ class VideoAnalyzer:
         if token:
             self.client = OpenAI(api_key=token, base_url=self.modelscope_base_url)
     
-    def analyze_video(self, video_path: str) -> str:
+    def analyze_video(self, video_path: str, system_prompt: str = None) -> str:
         if not video_path: return "No video provided for analysis"
         if not self.client: return "Error: MODELSCOPE_SDK_TOKEN not configured. Please check your .env file."
         try:
             video_duration = get_video_length(video_path)
             target_words = int(video_duration * self.target_words_per_second)
-            system_prompt = "You are a professional commentator for soccer. You are responsible for providing real-time commentary on the game."
-            user_prompt = f"Please describe this game, FOCUS ON the action of players and THE BALL, explicitly for goals, assists, fouls, offsides, yellow/red cards, substitutions, and corner kicks. The video is {round(video_duration, 0)} seconds long and therefore the commentary should be around {target_words} words long. You should also have an engaging tone. SKIP all non commentary content, 用廣東話回答, 不要使用英文, MAKE SURE YOU ARE SPOTTING CORRECT ACTIONS BEFORE ANSWERING"
+            if not system_prompt:
+                system_prompt = "You are a professional commentator for soccer. You are responsible for providing real-time commentary on the game.  Describe this game scene, FOCUS ON the action of players and THE BALL, explicitly for goals, assists, fouls, offsides, yellow/red cards, substitutions, and corner kicks. You should also have an engaging tone. SKIP all non commentary content, 用廣東話回答, 不要使用英文, MAKE SURE YOU ARE SPOTTING CORRECT ACTIONS BEFORE ANSWERING"
+            user_prompt = f" The video is {round(video_duration, 0)} seconds long and therefore the commentary should be around {target_words} words long. "
             video_messages = [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": [
