@@ -48,7 +48,7 @@ def osmakedirs(path_list):
         os.makedirs(path) if not os.path.exists(path) else None
 
 
-class RealtimeAvatar:
+class AvatarCreation:
     """Real-time avatar class for MuseTalk with preprocessing and caching."""
     
     def __init__(self, avatar_id, video_path, bbox_shift, batch_size, preparation, 
@@ -294,35 +294,61 @@ class RealtimeAvatar:
         )
         process_thread.start()
 
-        # Run inference
-        gen = datagen(
-            whisper_chunks,
-            self.input_latent_list_cycle,
-            self.batch_size
-        )
-        
-        start_time = time.time()
-        for i, (whisper_batch, latent_batch) in enumerate(tqdm(gen, total=int(np.ceil(float(video_num) / self.batch_size)))):
-            audio_feature_batch = self.pe(whisper_batch.to(self.device))
-            latent_batch = latent_batch.to(device=self.device, dtype=self.unet.model.dtype)
-
-            pred_latents = self.unet.model(
-                latent_batch,
-                self.timesteps,
-                encoder_hidden_states=audio_feature_batch
-            ).sample
-            pred_latents = pred_latents.to(device=self.device, dtype=self.vae.vae.dtype)
-            recon = self.vae.decode_latents(pred_latents)
+        # Pre-allocate tensors for reuse to avoid memory fragmentation
+        with torch.no_grad():  # Ensure no gradients are computed
+            gen = datagen(
+                whisper_chunks,
+                self.input_latent_list_cycle,
+                self.batch_size
+            )
             
-            for res_frame in recon:
-                res_frame_queue.put(res_frame)
+            start_time = time.time()
+            for i, (whisper_batch, latent_batch) in enumerate(tqdm(gen, total=int(np.ceil(float(video_num) / self.batch_size)))):
+                # Move tensors to device in-place to reuse memory
+                whisper_batch = whisper_batch.to(self.device, non_blocking=True)
+                latent_batch = latent_batch.to(device=self.device, dtype=self.unet.model.dtype, non_blocking=True)
+                
+                # Process audio features
+                audio_feature_batch = self.pe(whisper_batch)
+                
+                # Run UNet inference
+                pred_latents = self.unet.model(
+                    latent_batch,
+                    self.timesteps,
+                    encoder_hidden_states=audio_feature_batch
+                ).sample
+                
+                # Convert to VAE dtype in-place
+                pred_latents = pred_latents.to(dtype=self.vae.vae.dtype)
+                
+                # Decode latents
+                recon = self.vae.decode_latents(pred_latents)
+                
+                # Process frames and move to CPU efficiently
+                for res_frame in recon:
+                    # Convert to CPU using in-place operations when possible
+                    if torch.is_tensor(res_frame):
+                        # Use contiguous memory layout for efficient transfer
+                        if not res_frame.is_contiguous():
+                            res_frame = res_frame.contiguous()
+                        res_frame_cpu = res_frame.detach().cpu().numpy()
+                    else:
+                        res_frame_cpu = res_frame
+                    res_frame_queue.put(res_frame_cpu)
+                
+                # Reuse tensors by setting to None (allows garbage collection without fragmentation)
+                whisper_batch = None
+                latent_batch = None
+                audio_feature_batch = None
+                pred_latents = None
+                recon = None
         
         # Wait for processing to complete
         process_thread.join()
 
         processing_time = time.time() - start_time
-        print(f'Total processing time for {video_num} frames: {processing_time:.2f}s')
-        print(f'Average time per frame: {processing_time/video_num*1000:.2f}ms')
+        print(f'Total processing time for {video_num} frames: {processing_time:.2f}s, fps: {video_num/processing_time:.2f}')
+        # print(f'Average time per frame: {processing_time/video_num*1000:.2f}ms')
 
         # Generate final video if requested
         if out_vid_name is not None and not skip_save_images:
@@ -363,7 +389,7 @@ def create_realtime_avatar(
     extra_margin=10, parsing_mode="jaw", left_cheek_width=90, right_cheek_width=90
 ):
     """Create a real-time avatar instance."""
-    return RealtimeAvatar(
+    return AvatarCreation(
         avatar_id=avatar_id,
         video_path=video_path,
         bbox_shift=bbox_shift,

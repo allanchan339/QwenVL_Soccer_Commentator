@@ -53,7 +53,7 @@ def parse_args():
     parser.add_argument('--inpainting_result_dir', type=str, default='./results/output', help='Directory for inpainting results')
     parser.add_argument('--debug_result_dir', type=str, default='./results/debug', help='Directory for debug inpainting results')
     parser.add_argument('--inpainting_fps', type=int, default=25, help='FPS for inpainting output')
-    parser.add_argument('--inpainting_batch_size', type=int, default=8, help='Batch size for inpainting')
+    parser.add_argument('--inpainting_batch_size', type=int, default=25, help='Batch size for inpainting')
     parser.add_argument('--inpainting_output_vid_name', type=str, default='', help='Output video name for inpainting')
     parser.add_argument('--inpainting_use_saved_coord', action='store_true', default=False, help='Use saved coordinates for inpainting')
     parser.add_argument('--inpainting_audio_padding_left', type=int, default=2, help='Audio left padding for inpainting')
@@ -156,19 +156,12 @@ def merged_interface(args):
                 gr.Markdown("### 3. Talking Head Video Generation")
                 driving_audio = gr.Audio(label="Driving Audio (TTS output or upload your own)", type="filepath", interactive=True)
                 
-                # --- STANDARD VIDEO GENERATION ---
-                gr.Markdown("#### Standard Video Generation (One-time processing)")
-                
-                generate_btn = gr.Button("Generate Standard Video", variant="primary")
-                
-                                # --- REAL-TIME AVATAR SECTION ---
-                gr.Markdown("### 4. Real-Time Avatar (MuseV)")
                 avatar_id_input = gr.Textbox(label="Avatar ID", placeholder="Enter unique avatar name", value="my_avatar")
                 avatar_video_input = gr.Video(label="Avatar Reference Video (Upload face video for avatar creation)", sources=['upload'])
                 
                 with gr.Row():
                     create_avatar_btn = gr.Button("1. Create Avatar", variant="primary")
-                    realtime_generate_btn = gr.Button("2. Generate Talking Head Video", variant="primary")
+                    realtime_generate_btn = gr.Button("2. Generate Talking Head", variant="primary")
                 
                 # Inpainting parameter controls (hidden by default, can be shown if needed)
                 # Move these to the bottom of the left column in a dropdown
@@ -191,12 +184,6 @@ def merged_interface(args):
                 gr.Markdown("### Real-Time Avatar Output")
                 realtime_output_video = gr.Video(label="Real-Time Generated Video")
                 
-                # Standard inpainting output
-                gr.Markdown("### Standard Inpainting Output")
-                inpainting_output_video = gr.Video(label="Generated Video")
-                
-
-                
                 # Parameter Information as dropdown/accordion
                 with gr.Accordion("Parameter Information", open=False):
                     debug_output_info = gr.Textbox(label="Parameter Information", lines=4)
@@ -213,47 +200,6 @@ def merged_interface(args):
         
         # Helper functions for real-time inpainting
         
-        def generate_standard_video(audio, video, bbox_s, extra_m, parsing_m, l_cheek, r_cheek,
-                                  device, vae, unet, pe, weight_dtype, audio_processor, 
-                                  whisper, timesteps, result_dir, fps, batch_size, 
-                                  output_vid_name, version):
-            """Generate video using real-time inference approach."""
-            if not audio or not video:
-                return None, "Please provide both audio and video"
-            
-            try:
-                # Create a temporary avatar for this video
-                temp_avatar_id = f"temp_{os.path.basename(video).split('.')[0]}"
-                
-                result = realtime_inference(
-                    avatar_id=temp_avatar_id,
-                    audio_path=audio,
-                    video_path=video,
-                    bbox_shift=bbox_s,
-                    batch_size=batch_size,
-                    preparation=True,  # Create new avatar for this video
-                    device=device,
-                    vae=vae,
-                    unet=unet,
-                    pe=pe,
-                    weight_dtype=weight_dtype,
-                    audio_processor=audio_processor,
-                    whisper=whisper,
-                    timesteps=timesteps,
-                    version=version,
-                    extra_margin=extra_m,
-                    parsing_mode=parsing_m,
-                    left_cheek_width=l_cheek,
-                    right_cheek_width=r_cheek,
-                    fps=fps,
-                    skip_save_images=False,
-                    output_vid_name=output_vid_name if output_vid_name else f"standard_{temp_avatar_id}"
-                )
-                
-                return result, f"Video generated successfully using real-time approach!"
-                
-            except Exception as e:
-                return None, f"Error generating video: {str(e)}"
         def process_analysis_video(video_path):
             if not video_path:
                 return "No video provided."
@@ -290,21 +236,21 @@ def merged_interface(args):
         # Avatar video input change (ffmpeg check)
         avatar_video_input.change(fn=check_video, inputs=[avatar_video_input], outputs=[avatar_video_input])
         # Generate Full Video (using real-time inference)
-        generate_btn.click(
-            fn=lambda audio, video, bbox_s, extra_m, parsing_m, l_cheek, r_cheek: generate_standard_video(
-                audio, video, bbox_s, extra_m, parsing_m, l_cheek, r_cheek,
-                device=device, vae=vae, unet=unet, pe=pe, 
-                weight_dtype=weight_dtype, audio_processor=audio_processor, 
-                whisper=whisper, timesteps=timesteps,
-                result_dir=args.inpainting_result_dir,
-                fps=args.inpainting_fps,
-                batch_size=args.inpainting_batch_size,
-                output_vid_name=args.inpainting_output_vid_name,
-                version=args.inpainting_version
-            ),
-            inputs=[driving_audio, avatar_video_input, bbox_shift, extra_margin, parsing_mode, left_cheek_width, right_cheek_width],
-            outputs=[inpainting_output_video, debug_output_info]
-        )
+        # generate_btn.click(
+        #     fn=lambda audio, video, bbox_s, extra_m, parsing_m, l_cheek, r_cheek: generate_standard_video(
+        #         audio, video, bbox_s, extra_m, parsing_m, l_cheek, r_cheek,
+        #         device=device, vae=vae, unet=unet, pe=pe, 
+        #         weight_dtype=weight_dtype, audio_processor=audio_processor, 
+        #         whisper=whisper, timesteps=timesteps,
+        #         result_dir=args.inpainting_result_dir,
+        #         fps=args.inpainting_fps,
+        #         batch_size=args.inpainting_batch_size,
+        #         output_vid_name=args.inpainting_output_vid_name,
+        #         version=args.inpainting_version
+        #     ),
+        #     inputs=[driving_audio, avatar_video_input, bbox_shift, extra_margin, parsing_mode, left_cheek_width, right_cheek_width],
+        #     outputs=[inpainting_output_video, debug_output_info]
+        # )
         
         # --- REAL-TIME AVATAR EVENT HANDLERS ---
         
