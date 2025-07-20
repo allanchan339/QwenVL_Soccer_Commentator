@@ -8,14 +8,16 @@ import sys
 
 class VideoAnalyzer:
     """Service for analyzing soccer videos using Qwen2.5-VL model."""
-    def __init__(self, qwen_model="Qwen/Qwen2.5-VL-72B-Instruct", modelscope_base_url="https://api-inference.modelscope.cn/v1", target_words_per_second=4):
+    def __init__(self, qwen_model="Qwen/Qwen2.5-VL-72B-Instruct", modelscope_base_url="https://api-inference.modelscope.cn/v1", target_words_per_second=4, modelscope_token=None):
         self.qwen_model = qwen_model
         self.modelscope_base_url = modelscope_base_url
         self.target_words_per_second = target_words_per_second
         self.client = None
-        MODELSCOPE_SDK_TOKEN = os.getenv("MODELSCOPE_SDK_TOKEN")
-        if MODELSCOPE_SDK_TOKEN:
-            self.client = OpenAI(api_key=MODELSCOPE_SDK_TOKEN, base_url=self.modelscope_base_url)
+        
+        # Use provided token or fall back to environment variable
+        token = modelscope_token or os.getenv("MODELSCOPE_SDK_TOKEN")
+        if token:
+            self.client = OpenAI(api_key=token, base_url=self.modelscope_base_url)
     
     def analyze_video(self, video_path: str) -> str:
         if not video_path: return "No video provided for analysis"

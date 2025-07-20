@@ -2,19 +2,17 @@
 
 - Python 3.10+
 - Dependency management: mamba / conda
+- Current Environment: Conda activate SoCommVoice
 - Code formatting: Ruff
 - Type hinting: typing module (strict)
 - Testing: pytest
 - Documentation: Google style docstring
-- Environment: conda / venv
+- Environment: conda
 - Containerization: docker, docker-compose
 - Async: async/await
 - Web: webrtc
-- Demo: gradio, streamlit
+- Demo: gradio
 - LLM: langchain, transformers
-- Vector DB: faiss, chroma (optional)
-- Experiment tracking: mlflow, tensorboard (optional)
-- HPO: optuna, hyperopt (optional)
 - Data: pandas, numpy, dask (optional), pyspark (optional)
 - Version control: git
 - Process: systemd, supervisor

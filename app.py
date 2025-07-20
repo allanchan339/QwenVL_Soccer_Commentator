@@ -26,7 +26,11 @@ from SoComm.utils import fast_check_ffmpeg, check_video, ensure_directory_exists
 from SoComm.video_analyzer import VideoAnalyzer
 
 # --- Load environment variables for Video Analysis ---
-load_dotenv()
+load_dotenv(override=True)
+
+# Assert that MODELSCOPE_SDK_TOKEN is properly loaded
+MODELSCOPE_SDK_TOKEN = os.getenv("MODELSCOPE_SDK_TOKEN")
+assert MODELSCOPE_SDK_TOKEN, "MODELSCOPE_SDK_TOKEN not found in environment variables. Please check your .env file and ensure python-dotenv is installed."
 
 # =================== MODEL & APP CONFIGURATION ===================
 
@@ -67,7 +71,6 @@ def parse_args():
     return parser.parse_args()
 
 # --- Configuration for Video Analysis ---
-MODELSCOPE_SDK_TOKEN = os.getenv("MODELSCOPE_SDK_TOKEN")
 QWEN_MODEL = "Qwen/Qwen2.5-VL-72B-Instruct"
 MODELSCOPE_BASE_URL = "https://api-inference.modelscope.cn/v1"
 GALLERY_DIR = "video_gallery"
@@ -194,7 +197,8 @@ def merged_interface(args):
         video_analyzer = VideoAnalyzer(
             qwen_model=args.qwen_model,
             modelscope_base_url=args.modelscope_base_url,
-            target_words_per_second=args.target_words_per_second
+            target_words_per_second=args.target_words_per_second,
+            modelscope_token=MODELSCOPE_SDK_TOKEN
         )
         
         # Helper functions for real-time inpainting
