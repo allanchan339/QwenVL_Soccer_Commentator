@@ -377,9 +377,19 @@ class AvatarCreation:
             os.remove('temp.mp4')
             shutil.rmtree(output_dir)
             print(f"Result saved to {output_video}")
-            return output_video
+            return {
+                'output_video': output_video,
+                'processing_time': processing_time,
+                'frame_count': video_num,
+                'fps_achieved': video_num/processing_time
+            }
         
-        return None
+        return {
+            'output_video': None,
+            'processing_time': processing_time,
+            'frame_count': video_num,
+            'fps_achieved': video_num/processing_time
+        }
 
 
 def create_realtime_avatar(
