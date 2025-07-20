@@ -112,6 +112,38 @@ if sys.platform == 'win32':
 
 # =================== UTILITY FUNCTIONS ===================
 
+def load_avatar_gallery(avatars_dir="results/v15/avatars"):
+    """Load avatar gallery from the avatars directory."""
+    gallery_items = []
+    
+    if not os.path.exists(avatars_dir):
+        return gallery_items
+    
+    for avatar_name in os.listdir(avatars_dir):
+        avatar_path = os.path.join(avatars_dir, avatar_name)
+        if os.path.isdir(avatar_path):
+            # Check if mask_coords.pkl exists (indicates avatar is ready for inference)
+            mask_coords_path = os.path.join(avatar_path, "mask_coords.pkl")
+            if not os.path.exists(mask_coords_path):
+                continue  # Skip this avatar if mask_coords.pkl doesn't exist
+            
+            # Look for the first image in full_imgs directory
+            full_imgs_path = os.path.join(avatar_path, "full_imgs")
+            if os.path.exists(full_imgs_path):
+                # Try to find 00000001.png first, then any other image
+                target_image = os.path.join(full_imgs_path, "00000001.png")
+                if not os.path.exists(target_image):
+                    # Find any image file
+                    for img_file in os.listdir(full_imgs_path):
+                        if img_file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                            target_image = os.path.join(full_imgs_path, img_file)
+                            break
+                
+                if os.path.exists(target_image):
+                    gallery_items.append((target_image, avatar_name))
+    
+    return gallery_items
+
 # =================== SERVICES (for Video Analysis) ===================
 
 # =================== MERGED GRADIO UI ===================
@@ -156,18 +188,37 @@ def merged_interface(args):
                 )
                 tts_btn = gr.Button("Synthesize Audio")
                 
+                # Progress tracking component
+                progress_tracker = gr.Progress()
+                
                 # --- AUDIO BLOCK: TTS Output & Driving Audio for Video Generation ---
                 gr.Markdown("### 3. Talking Head Video Generation")
                 driving_audio = gr.Audio(label="Driving Audio (TTS output or upload your own)", type="filepath", interactive=True)
                 
                 gr.Markdown("### 3.1. Avatar Creation (MuseV)")
-                avatar_id_input = gr.Textbox(label="Avatar ID", placeholder="Enter unique avatar name", value="my_avatar")
-                avatar_video_input = gr.Video(label="Avatar Reference Video (Upload face video for avatar creation)", sources=['upload'])
                 
-                with gr.Row():
-                    create_avatar_btn = gr.Button("1. Create Avatar", variant="primary")
-                    realtime_generate_btn = gr.Button("2. Generate Talking Head", variant="primary")
+                # Navigation tabs for avatar creation/gallery
+                with gr.Tabs():
+                    with gr.TabItem("1. Avatar Creation"):
+                        avatar_id_input = gr.Textbox(label="Avatar ID", placeholder="Enter unique avatar name", value="my_avatar")
+                        avatar_video_input = gr.Video(label="Avatar Reference Video (Upload face video for avatar creation)", sources=['upload'])
+                        
+                        
+                        create_avatar_btn = gr.Button("Create Avatar (Which consumes time)", variant="primary")
+                    
+                    with gr.TabItem("2. Avatar Gallery"):
+                        gr.Markdown("**Select from existing avatars:**")
+                        avatar_gallery = gr.Gallery(
+                            label="Avatar Gallery",
+                            show_label=True,
+                            elem_id="avatar_gallery",
+                            value=load_avatar_gallery(),
+                            columns=3, rows=2, object_fit="contain", allow_preview=False
+                        )
+                        refresh_avatar_gallery_btn = gr.Button("🔄 Refresh Avatar Gallery", size="sm")
                 
+                    realtime_generate_btn = gr.Button("Generate Talking Head", variant="primary")
+
                 # Inpainting parameter controls (hidden by default, can be shown if needed)
                 # Move these to the bottom of the left column in a dropdown
                 # bbox_shift = gr.Number(label="BBox Shift (px)", value=0, visible=False)
@@ -190,9 +241,11 @@ def merged_interface(args):
                 realtime_output_video = gr.Video(label="Real-Time Generated Video")
                 
                 # Parameter Information as dropdown/accordion
-                with gr.Accordion("Parameter Information", open=False):
-                    debug_output_info = gr.Textbox(label="Parameter Information", lines=4)
+                with gr.Accordion("Running Information", open=True):
+                    debug_output_info = gr.Textbox(label="Console Output", lines=4)
                 
+
+
         # =================== EVENT HANDLERS ===================
         video_analyzer = VideoAnalyzer(
             qwen_model=args.qwen_model,
@@ -203,7 +256,7 @@ def merged_interface(args):
         
         # Helper functions for real-time inpainting
         
-        def process_analysis_video(video_path):
+        def process_analysis_video(video_path, progress=gr.Progress(track_tqdm=True)):
             if not video_path:
                 return "No video provided."
             commentary = video_analyzer.analyze_video(video_path)
@@ -219,11 +272,42 @@ def merged_interface(args):
             else:
                 print(f"Warning: Unexpected data type or structure from gallery selection: {type(selected_data)}. Value: {selected_data}")
                 return None
+        
+        def select_avatar_from_gallery(evt: gr.SelectData) -> Tuple[str, str]:
+            """Handle avatar gallery selection to set avatar ID and show preview."""
+            selected_data = evt.value
+            if isinstance(selected_data, dict) and 'caption' in selected_data:
+                avatar_name = selected_data['caption']
+                gr.Info(f"✅ Avatar '{avatar_name}' selected successfully!")
+                return avatar_name, f"Selected avatar: {avatar_name}"
+            elif isinstance(selected_data, tuple) and len(selected_data) >= 2:
+                image_path, avatar_name = selected_data[0], selected_data[1]
+                gr.Info(f"✅ Avatar '{avatar_name}' selected successfully!")
+                return avatar_name, f"Selected avatar: {avatar_name}"
+            elif isinstance(selected_data, str):
+                # Extract avatar name from path
+                avatar_name = os.path.basename(os.path.dirname(os.path.dirname(selected_data)))
+                gr.Info(f"✅ Avatar '{avatar_name}' selected successfully!")
+                return avatar_name, f"Selected avatar: {avatar_name}"
+            else:
+                print(f"Warning: Unexpected data type from avatar gallery selection: {type(selected_data)}. Value: {selected_data}")
+                gr.Info("❌ Failed to select avatar. Please try again.")
+                return "", "No avatar selected"
+        
+
         # Copy text from commentary to TTS
         def copy_text(val):
             return val
         # Gallery selection sets the video input
         gallery.select(fn=select_gallery_video, outputs=[video_input])
+        
+
+        
+        # Avatar gallery selection sets the avatar ID
+        avatar_gallery.select(fn=select_avatar_from_gallery, outputs=[avatar_id_input, debug_output_info])
+        
+        # Refresh avatar gallery
+        refresh_avatar_gallery_btn.click(fn=load_avatar_gallery, outputs=[avatar_gallery])
         # Analyze button triggers video analysis and commentary (only updates the merged box)
         analyze_btn.click(
             fn=process_analysis_video,
@@ -257,17 +341,26 @@ def merged_interface(args):
         
         # --- REAL-TIME AVATAR EVENT HANDLERS ---
         
-        def create_avatar(avatar_id, video_path, bbox_s, extra_m, parsing_m, l_cheek, r_cheek):
+        def create_avatar(avatar_id, video_path, bbox_s, extra_m, parsing_m, l_cheek, r_cheek, progress=gr.Progress(track_tqdm=True)):
             """Create a real-time avatar."""
             if not avatar_id or not avatar_id.strip():
                 gr.Info("Error: Please enter an avatar ID")
-                return None
+                return None, "Error: Please enter an avatar ID"
             if not video_path:
                 gr.Info("Error: Please upload a reference video")
-                return None
+                return None, "Error: Please upload a reference video"
+            
+            # Check if avatar already exists
+            avatar_dir = os.path.join("results", "v15", "avatars", avatar_id.strip())
+            if os.path.exists(avatar_dir):
+                gr.Warning(f"Avatar ID '{avatar_id.strip()}' already exists! Please choose a different name.")
+                return None, f"❌ Avatar ID '{avatar_id.strip()}' already exists! Please rename and try again."
             
             try:
+                progress(0, desc="Starting avatar creation...")
                 start_time = time.time()
+                
+                progress(0.1, desc="Loading models and preparing avatar...")
                 avatar = create_realtime_avatar(
                     avatar_id=avatar_id.strip(),
                     video_path=video_path,
@@ -289,6 +382,7 @@ def merged_interface(args):
                     right_cheek_width=r_cheek
                 )
                 
+                progress(1.0, desc="Avatar creation completed!")
                 total_time = time.time() - start_time
                 
                 # Create detailed parameter information
@@ -312,12 +406,12 @@ def merged_interface(args):
                 """
                 
                 gr.Info(f"Avatar '{avatar_id}' created successfully! Ready for real-time generation.")
-                return param_info
+                return param_info, f"✅ Avatar '{avatar_id}' created successfully! Ready for real-time generation."
             except Exception as e:
                 gr.Info(f"Error creating avatar: {str(e)}")
-                return None
+                return None, f"❌ Error creating avatar: {str(e)}"
         
-        def generate_realtime_video(avatar_id, audio_path, bbox_s, extra_m, parsing_m, l_cheek, r_cheek):
+        def generate_realtime_video(avatar_id, audio_path, bbox_s, extra_m, parsing_m, l_cheek, r_cheek, progress=gr.Progress(track_tqdm=True)):
             """Generate real-time video using existing avatar."""
             if not avatar_id or not avatar_id.strip():
                 return None, "Error: Please enter an avatar ID"
@@ -325,6 +419,9 @@ def merged_interface(args):
                 return None, "Error: Please provide audio for generation"
             
             try:
+                progress(0, desc="Starting video generation...")
+                
+                progress(0.2, desc="Loading avatar and processing audio...")
                 result = realtime_inference(
                     avatar_id=avatar_id.strip(),
                     audio_path=audio_path,
@@ -349,6 +446,8 @@ def merged_interface(args):
                     skip_save_images=False,
                     output_vid_name=f"realtime_{avatar_id}"
                 )
+                
+                progress(1.0, desc="Video generation completed!")
                 
                 # Extract timing information from result
                 processing_time = result.get('processing_time', 0)
@@ -377,24 +476,24 @@ PROCESSING STATS:
 • Audio File: {os.path.basename(audio_path)}
 • Output: {output_video if output_video else 'Generated successfully'}"""
                 
-                return output_video, param_info
+                return output_video, param_info, f"✅ Video generation completed successfully!"
             except Exception as e:
-                return None, f"Error generating real-time video: {str(e)}"
+                return None, f"Error generating real-time video: {str(e)}", f"❌ Error generating video: {str(e)}"
         
         # Create Avatar button
         create_avatar_btn.click(
             fn=create_avatar,
             inputs=[avatar_id_input, avatar_video_input, bbox_shift, extra_margin, parsing_mode, left_cheek_width, right_cheek_width],
-            outputs=[debug_output_info]
+            outputs=[debug_output_info, progress_display]
         )
         
         # Generate Real-Time Video button
         realtime_generate_btn.click(
             fn=generate_realtime_video,
             inputs=[avatar_id_input, driving_audio, bbox_shift, extra_margin, parsing_mode, left_cheek_width, right_cheek_width],
-            outputs=[realtime_output_video, debug_output_info]
+            outputs=[realtime_output_video, debug_output_info, progress_display]
         )
-        gr.HTML("""<style>#left-col, #right-col { padding: 1.5rem; } #video_gallery { min-height: 200px; }</style>""")
+        gr.HTML("""<style>#left-col, #right-col { padding: 1.5rem; } #video_gallery { min-height: 200px; } #avatar_gallery { min-height: 200px; margin-top: 1rem; }</style>""")
     return demo
 
 # =================== MAIN EXECUTION ===================
