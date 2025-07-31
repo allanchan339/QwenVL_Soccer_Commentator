@@ -1,9 +1,10 @@
 # Requirement 
-1. NVidia GPU with CUDA support (Here we use 8*RTX4090)
+1. NVidia GPU with CUDA support (1*RTX4060 is enough)
 2. Ubuntu 20.04 or higher
 3. Driver version >= 570.133 
 4. CUDA version >= 12.0
 5. The environment must be created with Python 3.10 (CosyVoice-ttsfrd requires Python 3.10)
+6. [ModelScope API](https://www.modelscope.cn/my/myaccesstoken) key is required for LLM.
 
 # Installation 
 ## Git 
@@ -37,7 +38,7 @@ mim install "mmpose>=1.1.0" # mmpose 1.3.2 requires mmdet<3.3.0,>=3.0.0; extra =
 pip install -U "huggingface_hub[cli]" # u also need to login to download some models
 ```
 
-### Install additional dependencies for CosyVoice:
+### Install additional dependencies for CosyVoice: (Ignored as yet implemented)
 ```bash
 # If you encounter sox compatibility issues
 # ubuntu
@@ -46,14 +47,14 @@ sudo apt-get install sox libsox-dev
 sudo yum install sox sox-devel
 ```
 
-### Install additional dependencies for PaddleSpeech:
+### Install additional dependencies for PaddleSpeech (Ignored):
 ```bash
 pip install paddlespeech paddlepaddle --no-deps
 pip install yacs g2p-en opencc pypinyin pypinyin-dict opencc-python-reimplemented braceexpand ToJyutping webrtcvad zhon timer
 ```
 
 ## Download pre-trained models
-### Download the pre-trained models and install CosyVoice-ttsfrd:
+### Download the pre-trained models and install CosyVoice-ttsfrd (Ignored as not required):
 ```bash
 # Download the CosyVoice model
 python download_model_cosyvoice.py
