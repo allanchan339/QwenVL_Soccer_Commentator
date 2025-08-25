@@ -69,6 +69,5 @@ pip install ttsfrd-0.4.2-cp310-cp310-linux_x86_64.whl
 ### Download the pre-trained models and install MuseTalk:
 ```bash
 # Download the MuseTalk model
-cd MuseTalk
 sh ./download_weights.sh
 ```
