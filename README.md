@@ -1,17 +1,19 @@
-# Soccer Commentary & Talking Head Video Generation Demo
+# Cantonese Soccer Commentary & Talking Head Video Generation
 
 This repository demonstrates an AI-powered system that generates soccer commentary with synchronized talking head videos using advanced speech synthesis and lip-sync technology.
 
 ## Demo Videos
+### Video Source
+The source video is extracted from [here](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.facebook.com/ChungChiKwongchannel/videos/%25E4%25BC%258D%25E6%2599%2583%25E6%25A6%25AE%25E5%25A0%25B1%25E5%25B0%258E2004-%25E6%25AD%2590%25E5%259C%258B%25E7%259B%2583-%25E6%25B3%2595%25E5%259C%258B-21%25E8%258B%25B1%25E6%25A0%25BC%25E8%2598%25AD/1905282819776195/&ved=2ahUKEwiH3uPFsaqPAxUQElkFHdenCA4QtwJ6BAgQEAI&usg=AOvVaw2sLuZ0DgyOrv5iGperOuTw)
 
 ### Pure Lip Sync Demo
-![Pure Lip Sync](assets/video/pure_lip_sync.mp4)
+https://github.com/user-attachments/assets/c24946a7-0f81-490c-840a-9f5c3c9300aa
 
 ### Commentary Results
-![Commentary Results](assets/video/commentary_results.mp4)
+https://github.com/user-attachments/assets/41373536-0d6b-4d08-be6a-fc39612c4176
 
 ### Full Demo Recording
-![Full Demo](assets/video/2025-08-27%2014-27-28.mov)
+https://github.com/user-attachments/assets/c7c591a9-0d32-4a28-9794-f3880621b8c5
 
 ## Features
 - **AI Soccer Commentary**: Generate realistic soccer match commentary using LLM
