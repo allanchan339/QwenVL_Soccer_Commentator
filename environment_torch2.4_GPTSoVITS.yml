@@ -1,4 +1,4 @@
-name: SoCommVoice
+name: SoCommVoice2.4
 # LLM: integrated modelscope for Qwen2.5VL calling
 # TTS: integrated edge_tts & cosyvoice requirements.txt 
 # THG: integrated musetalk requirements.txt 
@@ -35,12 +35,13 @@ dependencies:
   - tensorboard>=2.16.1 # Updated from new list
   - transformers==4.39.2 # Updated from new list
   - uvicorn==0.30.0
-  - huggingface_hub[cli]>=0.30.2 # New
+  # - huggingface_hub[cli]==0.30.2 # New
   - requests # New
   - imageio # New
   - moviepy # New
+
   # Packages moved from pip
-  - accelerate==0.28.0
+  - accelerate==1.1.1
   - einops==0.8.1
   - ffmpeg-python
   - pyworld==0.3.4
@@ -49,22 +50,22 @@ dependencies:
   - fastapi-cli>=0.0.4
   - onnxruntime>=1.19.2
   - onnx
-
-  - pytorch-gpu==2.1.2
-  - torchvision==0.16.1 # pip 0.16.2
-  # - torchaudio==2.4.1 # pip 2.1.2
+  - pytorch-gpu==2.4.1
+  - torchvision==0.19.1 # pip 0.16.2
+  - torchaudio==2.4.1 # pip 2.1.2
   - ninja
   - scipy
-  - mmcv==2.1.0
-  # - mmpose
-  - mmdet==3.2.0
+  - mmcv==2.2.0
+  - mmdet==3.3.0
 
+  # GPT-SoVITS
+  # - numba
+  # - sentencepiece
+  - peft==0.10.0
+  # - chardet
+  # - 
 
   - pip:
-    # - --extra-index-url https://download.pytorch.org/whl/cu121
-    # - --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
-    # # Torch packages
-    # - torch==2.1.2 # downgrade to fit mmcv2.1.0
     
     # pip prefered package 
     - tensorflow==2.12.0
@@ -88,4 +89,20 @@ dependencies:
     - gradio==5.4.0
     # cosyvoice require pypi version wget
     - wget
+
+    # MuseTalk require pypi version 
+    - huggingface_hub[cli]
+
+    # # GPT-SoVITS required pypi only 
+    - fast_langdetect>=0.3.1
+    - split-lang
+    - x_transformers
+    - cn2an
+    - pypinyin
+    - jieba_fast
+    - ToJyutping
+    - wordsegment
+    - g2p_en
+    - faster-whisper --no-deps
+    - pyopenjtalk>=0.4.1
 

@@ -1,4 +1,4 @@
-name: SoCommVoice
+name: SoCommVoice2.4
 # LLM: integrated modelscope for Qwen2.5VL calling
 # TTS: integrated edge_tts & cosyvoice requirements.txt 
 # THG: integrated musetalk requirements.txt 
@@ -35,7 +35,7 @@ dependencies:
   - tensorboard>=2.16.1 # Updated from new list
   - transformers==4.39.2 # Updated from new list
   - uvicorn==0.30.0
-  - huggingface_hub[cli]>=0.30.2 # New
+  - huggingface_hub[cli]==0.30.2 # New
   - requests # New
   - imageio # New
   - moviepy # New
@@ -44,20 +44,23 @@ dependencies:
   - einops==0.8.1
   - ffmpeg-python
   - pyworld==0.3.4
+  # - tensorflow-gpu>=2.16.0
   - protobuf>=4.25
   - deepspeed>=0.15.1,<0.17.5
   - fastapi-cli>=0.0.4
   - onnxruntime>=1.19.2
   - onnx
-
-  - pytorch-gpu==2.1.2
-  - torchvision==0.16.1 # pip 0.16.2
-  # - torchaudio==2.4.1 # pip 2.1.2
+  # #paddlespeech required 
+  # - libsndfile 
+  # - bzip2
+  - pytorch-gpu==2.4.1
+  - torchvision==0.19.1 # pip 0.16.2
+  - torchaudio==2.4.1 # pip 2.1.2
   - ninja
   - scipy
-  - mmcv==2.1.0
+  - mmcv==2.2.0
   # - mmpose
-  - mmdet==3.2.0
+  - mmdet==3.3.0
 
 
   - pip:
@@ -82,10 +85,41 @@ dependencies:
     - tensorrt-cu12-bindings==10.0.1; sys_platform == 'linux'
     - tensorrt-cu12-libs==10.0.1; sys_platform == 'linux'
     - wetext==0.0.4
+
+    # # paddle tts support (only pip)
+    # - pytest-runner
+    # - g2pM
+    # - flatten_dict
+    # - jsonlines
+    # - kaldiio
+    # - loguru
+    # - nara-wpe
+    # - paddlespeech-feat
+    # - pathos
+    # - ppdiffusers>=0.9.0
+    # - pyloudnorm
+    # - resampy
+    # - sacrebleu
+    # # - g2pen 
+    # - editdistance
+    # - aistudio-sdk==0.2.6
     
     # failed to install via conda (run-time error)
     - pyarrow==18.1.0
     - gradio==5.4.0
     # cosyvoice require pypi version wget
     - wget
+
+    # MuseTalk require pypi version 
+    - huggingface_hub[cli]
+
+    # # mockingbird require 
+    # - sounddevice
+    # - SoundFile
+    # - PyWavelets
+    # - torch_complex
+    # - espent
+    # - umap-learn
+    # - monotonic-align==1.0.0
+    # - unidecode
 
