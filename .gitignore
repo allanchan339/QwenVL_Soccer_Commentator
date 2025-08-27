@@ -150,8 +150,16 @@ local_settings.py
 
 # System files
 Thumbs.db
+
+# Model files - ignore in root but allow in musetalk/models
+models/
+!musetalk/models/
+!musetalk/models/*
+
+# Legacy model paths
 CosyVoice/pretrained_models
 pretrained_models
 temp_audio
 results
 processed_videos
+.gradio
