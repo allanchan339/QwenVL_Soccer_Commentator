@@ -37,7 +37,7 @@ git submodule update --init --recursive
 ```
 
 ## Conda
-1. Install Miniconda or Anaconda.
+1. Install Miniconda or Anaconda (environment.yml is for pytorch 2.1.2, environment_torch2.4.yml is for pytorch 2.4.1).
 `conda env create -f environemt.yml`
 
 2. Activate the environment:
@@ -51,6 +51,28 @@ conda activate SoCommVoice
 # Install dependencies related to musetalk
 pip install --no-cache-dir -U openmim
 mim install mmengine 
+```
+
+#### Install mmdet (For Pytorch 2.4.1 only)
+Then we need to install mmdet and mmpose from source code and comment out the compatibility check in init.py. Otherwise, assertion error will be raised.
+
+```bash
+cd mmdetection
+# Comment out the compatibility check in init.py
+nano {python_path}/lib/python3.10/site-packages/mmdet/__init__.py 
+```
+
+Change the line 17 from:
+```python        
+and mmcv_version < digit_version(mmcv_maximum_version)), \
+```
+to:
+```python        
+and mmcv_version <= digit_version(mmcv_maximum_version)), \
+```
+
+#### Install mmpose
+```bash
 mim install "mmpose>=1.1.0" # not exist in conda-forge
 ```
 
