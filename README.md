@@ -39,12 +39,12 @@ git submodule update --init --recursive
 ```
 
 ## Conda
-1. Install Miniconda or Anaconda (environment.yml is for pytorch 2.1.2, environment_torch2.4.yml is for pytorch 2.4.1).
-`conda env create -f environemt.yml`
+1. Install Miniconda or Anaconda, then run following commands
+`conda env create -f environment_torch2.4.yml`
 
 2. Activate the environment:
 ```bash
-conda activate SoCommVoice
+conda activate SoCommVoice2.4
 ```
 
 ## Additional Dependencies
@@ -113,4 +113,9 @@ sh ./download_THG_weight.sh
 
 # Download the GPT-SoVITS models:
 bash ./download_TTS_weight.sh
+```
+
+# Run the demo
+```bash
+python web_ui_all.py
 ```
