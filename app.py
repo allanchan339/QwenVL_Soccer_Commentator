@@ -6,11 +6,8 @@ This single file combines the functionality of app_all.py and gradio_demo.py.
 
 # =================== IMPORTS & CONFIGURATION ===================
 import os
-import cv2
-import subprocess
 from typing import Optional, Tuple, List
 from dotenv import load_dotenv
-from openai import OpenAI
 import gradio as gr
 import sys
 import asyncio
