@@ -33,8 +33,8 @@ https://github.com/user-attachments/assets/c7c591a9-0d32-4a28-9794-f3880621b8c5
 ## Git 
 1. Clone the repository:
 ```bash
-git clone https://github.com/XX.git --depth 1  
-cd XX
+git clone https://github.com/allanchan339/VLM_Soccer_Commentator_THG --depth 1  
+cd VLM_Soccer_Commentator_THG
 git submodule update --init --recursive
 ```
 
@@ -109,5 +109,8 @@ pip install ttsfrd-0.4.2-cp310-cp310-linux_x86_64.whl
 ### Download the pre-trained models and install MuseTalk:
 ```bash
 # Download the MuseTalk model
-sh ./download_weights.sh
+sh ./download_THG_weight.sh
+
+# Download the GPT-SoVITS models:
+bash ./download_TTS_weight.sh
 ```

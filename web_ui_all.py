@@ -421,7 +421,7 @@ def merged_interface(args):
                 gr.Markdown("### 1. Select or Upload Soccer Clip")
                 
                 # Navigation tabs for soccer clip input/gallery
-                with gr.Tabs():
+                with gr.Tabs(elem_id="video_tabs") as video_tabs:
                     with gr.TabItem("1. Upload Video"):
                         video_input = gr.Video(label="Upload Soccer Clip", interactive=True)
                     
@@ -543,6 +543,9 @@ def merged_interface(args):
                             # Note: Using default models from inference_webui_fast.py
                             # No model management UI needed - models are loaded automatically
                 
+                # Hidden trigger for client-side tab switching
+                tab_switcher = gr.Number(visible=False, value=0)
+
                 # Progress tracking component
                 progress_tracker = gr.Progress()
                 
@@ -624,23 +627,23 @@ def merged_interface(args):
             except Exception as e:
                 gr.Info(f"❌ Error analyzing video: {str(e)}")
                 return f"Error analyzing video: {str(e)}"
-        def select_gallery_video(evt: gr.SelectData) -> Optional[str]:
+        def select_gallery_video(evt: gr.SelectData):
             selected_data = evt.value
             if isinstance(selected_data, dict) and 'video' in selected_data and isinstance(selected_data['video'], dict) and 'path' in selected_data['video']:
                 video_path = selected_data['video']['path']
                 gr.Info(f"✅ Selected video: {os.path.basename(video_path)}")
-                return video_path
+                return video_path, int(time.time())
             elif isinstance(selected_data, tuple) and len(selected_data) > 0:
                 video_path = selected_data[0]
                 gr.Info(f"✅ Selected video: {os.path.basename(video_path)}")
-                return video_path
+                return video_path, int(time.time())
             elif isinstance(selected_data, str):
                 gr.Info(f"✅ Selected video: {os.path.basename(selected_data)}")
-                return selected_data
+                return selected_data, int(time.time())
             else:
                 print(f"Warning: Unexpected data type or structure from gallery selection: {type(selected_data)}. Value: {selected_data}")
                 gr.Info("❌ Failed to select video. Please try again.")
-                return None
+                return None, int(time.time())
         
         def select_avatar_from_gallery(evt: gr.SelectData) -> Tuple[str, str]:
             """Handle avatar gallery selection to set avatar ID and show preview."""
@@ -680,8 +683,16 @@ def merged_interface(args):
             else:
                 return val  # Return unchanged if GPT-SoVITS not available
         
-        # Gallery selection sets the video input
-        gallery.select(fn=select_gallery_video, outputs=[video_input])
+        # Gallery selection sets the video input and triggers JS to jump back to tab 1
+        gallery.select(fn=select_gallery_video, outputs=[video_input, tab_switcher])
+
+        # Client-side tab switch to the first tab when tab_switcher changes
+        tab_switcher.change(
+            fn=None,
+            inputs=[],
+            outputs=[],
+            js="() => { const root = document.querySelector('#video_tabs'); if(!root) return; const first = root.querySelector('[role=tablist] button'); if(first) first.click(); }"
+        )
         
         # Refresh video gallery
         refresh_gallery_btn.click(fn=load_gallery_videos, inputs=[gr.State(args.gallery_dir), gr.State(args.video_extensions)], outputs=[gallery])
